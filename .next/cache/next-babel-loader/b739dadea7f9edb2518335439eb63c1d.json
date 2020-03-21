@@ -1,0 +1,1 @@
+{"ast":null,"code":"import \"./style.scss\";\nexport default (() => null);","map":{"version":3,"sources":["/Users/sean/Workspace/darts/pages/_app.js"],"names":[],"mappings":"AAAA,OAAO,cAAP;AAEA,gBAAe,MAAM,IAArB","sourcesContent":["import \"./style.scss\";\n\nexport default () => null;\n"]},"metadata":{},"sourceType":"module"}
