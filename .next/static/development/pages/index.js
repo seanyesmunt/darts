@@ -233,7 +233,7 @@ function Header() {
 
   var joinID = game && game.join_id;
   return __jsx("nav", {
-    className: "chalk flex items-center justify-between flex-wrap p-6 bg-teal-900 shadow-xs text-white",
+    className: "chalk flex items-center justify-between flex-wrap p-6 bg-black shadow-xs text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,

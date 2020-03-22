@@ -10,7 +10,7 @@ export default function Header() {
   const joinID = game && game.join_id;
 
   return (
-    <nav className="chalk flex items-center justify-between flex-wrap p-6 bg-teal-900 shadow-xs text-white">
+    <nav className="chalk flex items-center justify-between flex-wrap p-6 bg-black shadow-xs text-white">
       <span className="font-semibold text-4xl hover:text-teal-200 tracking-tight">
         <Link href="/">
           <a>darts.now.sh</a>
