@@ -27,6 +27,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 
 
+ // DB types
 
 var config = {
   apiKey: "AIzaSyDp01-0TwxRjNC05CuDcpauXRyLSMv0RRw",
@@ -43,8 +44,16 @@ if (!firebase_app__WEBPACK_IMPORTED_MODULE_2__["apps"].length) {
   firebase_app__WEBPACK_IMPORTED_MODULE_2__["initializeApp"](config);
 }
 
-var db = firebase_app__WEBPACK_IMPORTED_MODULE_2__["database"](); // DB types
-
+var db = firebase_app__WEBPACK_IMPORTED_MODULE_2__["database"]();
+var DEFAULT_SCORE = {
+  15: 0,
+  16: 0,
+  17: 0,
+  18: 0,
+  19: 0,
+  20: 0,
+  bull: 0
+};
 function getUser(userID) {
   return db.ref("/users/" + userID).once("value").then(function (snapshot) {
     var user = snapshot.val();
@@ -106,7 +115,8 @@ function createGame(userID, name) {
     join_id: gameID.slice(0, 4),
     players: [{
       id: userID,
-      name: name
+      name: name,
+      score: DEFAULT_SCORE
     }]
   };
   return new Promise(function (resolve, reject) {
@@ -132,7 +142,8 @@ function addPlayerToGame(gameID, userID, name) {
         var newGame = _objectSpread({}, game, {
           players: game.players.concat({
             id: userID,
-            name: name
+            name: name,
+            score: DEFAULT_SCORE
           })
         });
 

@@ -2,6 +2,43 @@ import { v4 as uuidv4 } from "uuid";
 import * as firebase from "firebase/app";
 import "firebase/database";
 
+// DB types
+declare global {
+  interface User {
+    id: string;
+    created_at: number;
+  }
+
+  interface Options {
+    name: string;
+  }
+
+  interface Player {
+    id: string;
+    name: string;
+    score: {
+      15: number;
+      16: number;
+      17: number;
+      18: number;
+      19: number;
+      20: number;
+      bull: number;
+    };
+  }
+
+  interface Game {
+    id: string;
+    creator_id: string;
+    join_id: string;
+    players: Array<Player>;
+  }
+
+  interface Error {
+    message: string;
+  }
+}
+
 const config = {
   apiKey: "AIzaSyDp01-0TwxRjNC05CuDcpauXRyLSMv0RRw",
   authDomain: "darts-yeslab.firebaseapp.com",
@@ -19,33 +56,15 @@ if (!firebase.apps.length) {
 
 const db = firebase.database();
 
-// DB types
-declare global {
-  interface User {
-    id: string;
-    created_at: number;
-  }
-
-  interface Options {
-    name: string;
-  }
-
-  interface Player {
-    id: string;
-    name: string;
-  }
-
-  interface Game {
-    id: string;
-    creator_id: string;
-    join_id: string;
-    players: Array<Player>;
-  }
-
-  interface Error {
-    message: string;
-  }
-}
+const DEFAULT_SCORE = {
+  15: 0,
+  16: 0,
+  17: 0,
+  18: 0,
+  19: 0,
+  20: 0,
+  bull: 0
+};
 
 export function getUser(userID: string): Promise<User> {
   return db
@@ -117,7 +136,8 @@ export function createGame(userID, name): Promise<Game> {
     players: [
       {
         id: userID,
-        name
+        name,
+        score: DEFAULT_SCORE
       }
     ]
   };
@@ -143,7 +163,11 @@ export function addPlayerToGame(gameID, userID, name) {
         if (!game.players.some(player => player.id === userID)) {
           const newGame = {
             ...game,
-            players: game.players.concat({ id: userID, name })
+            players: game.players.concat({
+              id: userID,
+              name,
+              score: DEFAULT_SCORE
+            })
           };
 
           db.ref("games/" + gameID).update(newGame, error => {

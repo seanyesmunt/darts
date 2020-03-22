@@ -121,6 +121,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
+ // DB types
 
 const config = {
   apiKey: "AIzaSyDp01-0TwxRjNC05CuDcpauXRyLSMv0RRw",
@@ -137,8 +138,16 @@ if (!firebase_app__WEBPACK_IMPORTED_MODULE_1__["apps"].length) {
   firebase_app__WEBPACK_IMPORTED_MODULE_1__["initializeApp"](config);
 }
 
-const db = firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"](); // DB types
-
+const db = firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"]();
+const DEFAULT_SCORE = {
+  15: 0,
+  16: 0,
+  17: 0,
+  18: 0,
+  19: 0,
+  20: 0,
+  bull: 0
+};
 function getUser(userID) {
   return db.ref("/users/" + userID).once("value").then(function (snapshot) {
     const user = snapshot.val();
@@ -200,7 +209,8 @@ function createGame(userID, name) {
     join_id: gameID.slice(0, 4),
     players: [{
       id: userID,
-      name
+      name,
+      score: DEFAULT_SCORE
     }]
   };
   return new Promise((resolve, reject) => {
@@ -224,7 +234,8 @@ function addPlayerToGame(gameID, userID, name) {
         const newGame = _objectSpread({}, game, {
           players: game.players.concat({
             id: userID,
-            name
+            name,
+            score: DEFAULT_SCORE
           })
         });
 
@@ -250,6 +261,148 @@ function addPlayerToGame(gameID, userID, name) {
 //     }
 //   }
 // }
+
+/***/ }),
+
+/***/ "./component/game.tsx":
+/*!****************************!*\
+  !*** ./component/game.tsx ***!
+  \****************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Game; });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+var _jsxFileName = "/Users/sean/Workspace/darts/component/game.tsx";
+var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
+
+function Game(props) {
+  const {
+    join_id,
+    players
+  } = props;
+  return __jsx("div", {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 6,
+      columnNumber: 5
+    }
+  }, __jsx("div", {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 7,
+      columnNumber: 7
+    }
+  }, "ID: ", join_id), __jsx("div", {
+    className: "flex",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 9,
+      columnNumber: 7
+    }
+  }, __jsx("div", {
+    className: "mr-10",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 10,
+      columnNumber: 9
+    }
+  }, ["", 15, 16, 17, 18, 19, 20, "bull"].map(value => {
+    return __jsx("div", {
+      className: "score__item",
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 12,
+        columnNumber: 20
+      }
+    }, value);
+  })), players.map(({
+    id,
+    name,
+    score
+  }) => __jsx("div", {
+    key: id,
+    className: "mr-10",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 16,
+      columnNumber: 11
+    }
+  }, __jsx("div", {
+    className: "score__item",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 17,
+      columnNumber: 13
+    }
+  }, name), __jsx("div", {
+    className: "score__item",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 18,
+      columnNumber: 13
+    }
+  }, score[15] || 0), __jsx("div", {
+    className: "score__item",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 19,
+      columnNumber: 13
+    }
+  }, score[16] || 0), __jsx("div", {
+    className: "score__item",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 20,
+      columnNumber: 13
+    }
+  }, score[17] || 0), __jsx("div", {
+    className: "score__item",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 21,
+      columnNumber: 13
+    }
+  }, score[18] || 0), __jsx("div", {
+    className: "score__item",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 22,
+      columnNumber: 13
+    }
+  }, score[19] || 0), __jsx("div", {
+    className: "score__item",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 23,
+      columnNumber: 13
+    }
+  }, score[20] || 0), __jsx("div", {
+    className: "score__item",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 24,
+      columnNumber: 13
+    }
+  }, score["bull"] || 0)))));
+}
 
 /***/ }),
 
@@ -375,43 +528,44 @@ function useGetUserID() {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Game; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return GamePage; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! next/router */ "next/router");
 /* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(next_router__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _effects_game__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../effects/game */ "./effects/game.ts");
-/* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../effects/user */ "./effects/user.ts");
-/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var _component_game__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../component/game */ "./component/game.tsx");
+/* harmony import */ var _effects_game__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../effects/game */ "./effects/game.ts");
+/* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../effects/user */ "./effects/user.ts");
+/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../api/firebase */ "./api/firebase.ts");
 var _jsxFileName = "/Users/sean/Workspace/darts/pages/game/[id].tsx";
 var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
 
+function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 
 
 
-function Game(props) {
+
+
+
+function GamePage(props) {
   const [name, setName] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState("");
   const router = Object(next_router__WEBPACK_IMPORTED_MODULE_1__["useRouter"])();
   const {
     id
   } = router.query;
-  const [game] = Object(_effects_game__WEBPACK_IMPORTED_MODULE_2__["useGetGame"])(id);
-  const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_3__["useGetUserID"])();
+  const [game] = Object(_effects_game__WEBPACK_IMPORTED_MODULE_3__["useGetGame"])(id);
+  const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])();
   const creatorID = game && game.creator_id;
   const players = game && game.players;
   const gameID = game && game.id;
   const isInGame = players && players.some(player => {
     return player.id === userID;
-  }); // React.useEffect(() => {
-  //   if (gameID && !amIncludedInListOfPlayers && creatorID !== userID) {
-  //     // addPlayerToGame(gameID, userID);
-  //   }
-  // }, [amIncludedInListOfPlayers, creatorID, userID, gameID]);
+  });
 
   function handleJoinGame() {
     if (gameID && !isInGame && creatorID !== userID) {
-      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_4__["addPlayerToGame"])(gameID, userID, name);
+      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_5__["addPlayerToGame"])(gameID, userID, name);
     }
   }
 
@@ -419,58 +573,29 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 40,
+      lineNumber: 34,
       columnNumber: 5
     }
   }, __jsx("main", {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 41,
+      lineNumber: 35,
       columnNumber: 7
     }
-  }, isInGame && __jsx("div", {
+  }, isInGame && __jsx(_component_game__WEBPACK_IMPORTED_MODULE_2__["default"], _extends({}, game, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 43,
-      columnNumber: 11
+      lineNumber: 36,
+      columnNumber: 22
     }
-  }, __jsx("div", {
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 44,
-      columnNumber: 13
-    }
-  }, "ID: ", game.join_id), __jsx("div", {
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 45,
-      columnNumber: 13
-    }
-  }, "Players"), __jsx("ol", {
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 46,
-      columnNumber: 13
-    }
-  }, players.map(player => __jsx("li", {
-    key: player.id,
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 48,
-      columnNumber: 17
-    }
-  }, player.name)))), !isInGame && __jsx("form", {
+  })), !isInGame && __jsx("form", {
     onSubmit: handleJoinGame,
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 54,
+      lineNumber: 38,
       columnNumber: 11
     }
   }, __jsx("label", {
@@ -478,7 +603,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 55,
+      lineNumber: 39,
       columnNumber: 13
     }
   }, "Enter your name"), __jsx("input", {
@@ -492,7 +617,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 56,
+      lineNumber: 40,
       columnNumber: 13
     }
   }), __jsx("button", {
@@ -501,7 +626,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 65,
+      lineNumber: 49,
       columnNumber: 13
     }
   }, "Join Game"))));

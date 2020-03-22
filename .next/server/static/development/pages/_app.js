@@ -121,6 +121,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
+ // DB types
 
 const config = {
   apiKey: "AIzaSyDp01-0TwxRjNC05CuDcpauXRyLSMv0RRw",
@@ -137,8 +138,16 @@ if (!firebase_app__WEBPACK_IMPORTED_MODULE_1__["apps"].length) {
   firebase_app__WEBPACK_IMPORTED_MODULE_1__["initializeApp"](config);
 }
 
-const db = firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"](); // DB types
-
+const db = firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"]();
+const DEFAULT_SCORE = {
+  15: 0,
+  16: 0,
+  17: 0,
+  18: 0,
+  19: 0,
+  20: 0,
+  bull: 0
+};
 function getUser(userID) {
   return db.ref("/users/" + userID).once("value").then(function (snapshot) {
     const user = snapshot.val();
@@ -200,7 +209,8 @@ function createGame(userID, name) {
     join_id: gameID.slice(0, 4),
     players: [{
       id: userID,
-      name
+      name,
+      score: DEFAULT_SCORE
     }]
   };
   return new Promise((resolve, reject) => {
@@ -224,7 +234,8 @@ function addPlayerToGame(gameID, userID, name) {
         const newGame = _objectSpread({}, game, {
           players: game.players.concat({
             id: userID,
-            name
+            name,
+            score: DEFAULT_SCORE
           })
         });
 

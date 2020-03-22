@@ -1,6 +1,6 @@
 import React from "react";
-import Link from "next/link";
 import { useRouter } from "next/router";
+import Game from "../../component/game";
 import { useGetGame } from "../../effects/game";
 import { useGetUserID } from "../../effects/user";
 import { addPlayerToGame } from "../../api/firebase";
@@ -9,7 +9,7 @@ interface Props {
   game?: Game;
 }
 
-export default function Game(props: Props) {
+export default function GamePage(props: Props) {
   const [name, setName] = React.useState<string>("");
   const router = useRouter();
   const { id } = router.query;
@@ -24,12 +24,6 @@ export default function Game(props: Props) {
       return player.id === userID;
     });
 
-  // React.useEffect(() => {
-  //   if (gameID && !amIncludedInListOfPlayers && creatorID !== userID) {
-  //     // addPlayerToGame(gameID, userID);
-  //   }
-  // }, [amIncludedInListOfPlayers, creatorID, userID, gameID]);
-
   function handleJoinGame() {
     if (gameID && !isInGame && creatorID !== userID) {
       addPlayerToGame(gameID, userID, name);
@@ -39,17 +33,7 @@ export default function Game(props: Props) {
   return (
     <div>
       <main>
-        {isInGame && (
-          <div>
-            <div>ID: {game.join_id}</div>
-            <div>Players</div>
-            <ol>
-              {players.map(player => (
-                <li key={player.id}>{player.name}</li>
-              ))}
-            </ol>
-          </div>
-        )}
+        {isInGame && <Game {...game} />}
         {!isInGame && (
           <form onSubmit={handleJoinGame}>
             <label className="text-gray-700">Enter your name</label>
