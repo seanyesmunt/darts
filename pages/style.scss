@@ -3,9 +3,21 @@
 @import "tailwindcss/utilities";
 
 body {
-  padding: 10rem;
+  font-size: 24px;
+}
+
+.score__column {
+  &:not(:last-of-type) {
+    .score__item {
+      border-right-width: 1px;
+    }
+  }
 }
 
 .score__item {
-  height: 2rem;
+  height: 6rem;
+
+  &:not(:last-of-type) {
+    border-bottom-width: 1px;
+  }
 }

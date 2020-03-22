@@ -180,6 +180,34 @@ export function addPlayerToGame(gameID, userID, name) {
   });
 }
 
+export function updateScore(gameID, userID, number, newScore) {
+  return new Promise((resolve, reject) => {
+    db.ref("games/" + gameID)
+      .once("value")
+      .then(snapshot => {
+        const game = snapshot.val();
+
+        const newGame = { ...game };
+        newGame.players = newGame.players.map(player => {
+          if (player.id !== userID) {
+            return player;
+          }
+
+          const newPlayer = { ...player };
+          newPlayer.score[number] = newScore;
+
+          return { ...newPlayer };
+        });
+
+        db.ref("games/" + gameID).set(newGame, error => {
+          if (error) {
+            console.error("error", error);
+          }
+        });
+      });
+  });
+}
+
 // const data = {
 //   games: {
 //     "one": {
