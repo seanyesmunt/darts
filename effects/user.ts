@@ -6,33 +6,44 @@ import { getUser } from "../api/firebase";
 const USER_ID = "user_id";
 
 export function useGetUser(): [User, Error?] {
-  const [userId, setUserId] = React.useState<string>();
+  const [userID, setUserID] = React.useState<string>();
   const [user, setUser] = React.useState<User>();
   const [error, setError] = React.useState();
 
   React.useEffect(() => {
     const userIDCookie = Cookies.get(USER_ID);
     if (userIDCookie) {
-      setUserId(userIDCookie);
+      setUserID(userIDCookie);
     } else {
-      const newId = uuidv4();
-      Cookies.set(USER_ID, newId, {
+      const newID = uuidv4();
+      Cookies.set(USER_ID, newID, {
         expires: 365
       });
 
-      setUserId(newId);
+      setUserID(newID);
     }
   }, []);
 
   React.useEffect(() => {
-    if (userId) {
-      getUser(userId)
-        .then(userFromDB => setUser(userFromDB))
+    if (userID) {
+      getUser(userID)
+        .then(userFromDB => {
+          setUser(userFromDB);
+        })
         .catch(error => {
           setError(error);
         });
     }
-  }, [userId]);
+  }, [userID]);
 
+  if (error) {
+    console.error(error);
+  }
   return [user, error];
+}
+
+export function useGetUserID(): string {
+  const [user] = useGetUser();
+
+  return user && user.id;
 }

@@ -97,14 +97,16 @@ module.exports =
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser */
+/*! exports provided: getUser, getGame, getGameId */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getUser", function() { return getUser; });
-/* harmony import */ var firebase__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! firebase */ "firebase");
-/* harmony import */ var firebase__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(firebase__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
+/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! firebase/app */ "firebase/app");
+/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(firebase_app__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! firebase/database */ "firebase/database");
 /* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(firebase_database__WEBPACK_IMPORTED_MODULE_1__);
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -126,37 +128,86 @@ const config = {
   measurementId: "G-7DHLMBZXEN"
 };
 
-if (!firebase__WEBPACK_IMPORTED_MODULE_0__["apps"].length) {
-  firebase__WEBPACK_IMPORTED_MODULE_0__["initializeApp"](config);
-  firebase__WEBPACK_IMPORTED_MODULE_0__["database"]();
-} // DB types
+if (!firebase_app__WEBPACK_IMPORTED_MODULE_0__["apps"].length) {
+  firebase_app__WEBPACK_IMPORTED_MODULE_0__["initializeApp"](config);
+}
 
+firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"](); // DB types
 
-function getUser(userId) {
-  return firebase__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("/users/" + userId).once("value").then(function (snapshot) {
+function getUser(userID) {
+  return firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("/users/" + userID).once("value").then(function (snapshot) {
     const user = snapshot.val();
-    console.log("user", user);
 
     if (user) {
-      return user;
+      return _objectSpread({}, user, {
+        id: userID
+      });
     }
 
-    return createUser(userId);
+    return createUser(userID);
   });
 }
 
-function createUser(userId) {
-  const user = {};
-  console.log("create user for: ", userId);
+function createUser(userID) {
+  const user = {
+    created_at: Date.now()
+  };
   return new Promise((resolve, reject) => {
-    firebase__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("users/" + userId).set(user, error => {
+    firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("users/" + userID).set(user, error => {
       if (error) {
-        reject(error.message);
+        reject(error);
       }
 
       resolve(_objectSpread({}, user, {
-        id: userId
+        id: userID
       }));
+    });
+  });
+}
+
+function getGame(gameID, userID) {
+  return firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("/games/" + gameID).once("value").then(function (snapshot) {
+    const game = snapshot.val();
+
+    if (game) {
+      return _objectSpread({}, game, {
+        id: gameID
+      });
+    }
+
+    return createGame(gameID, userID);
+  });
+}
+function getGameId(join_id) {
+  return new Promise((resolve, reject) => {
+    firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
+      snapshot.forEach(function (data) {
+        const id = data.key;
+
+        if (!id) {
+          reject("Game not found.");
+        } else {
+          resolve(id);
+        }
+      });
+    });
+  });
+}
+
+function createGame(gameID, userId) {
+  const game = {
+    creator_id: userId,
+    join_id: gameID.slice(0, 4)
+  };
+  return new Promise((resolve, reject) => {
+    firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("games/" + gameID).set(game, error => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(_objectSpread({}, game, {
+          id: gameID
+        }));
+      }
     });
   });
 } // const data = {
@@ -176,16 +227,88 @@ function createUser(userId) {
 
 /***/ }),
 
+/***/ "./effects/game.ts":
+/*!*************************!*\
+  !*** ./effects/game.ts ***!
+  \*************************/
+/*! exports provided: useGetGame, useGetGameID */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useGetGame", function() { return useGetGame; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useGetGameID", function() { return useGetGameID; });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! uuid */ "uuid");
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(uuid__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! js-cookie */ "js-cookie");
+/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./user */ "./effects/user.ts");
+
+
+
+
+
+const GAME_ID = "game_id";
+function useGetGame(gameIDFromUrl) {
+  console.log("gameID", gameIDFromUrl);
+  const userID = Object(_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])();
+  const [gameID, setgameID] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState(gameIDFromUrl);
+  const [game, setGame] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState();
+  const [error, setError] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState();
+  react__WEBPACK_IMPORTED_MODULE_0___default.a.useEffect(() => {
+    if (gameIDFromUrl) {
+      setgameID(gameIDFromUrl);
+      js_cookie__WEBPACK_IMPORTED_MODULE_2___default.a.set(GAME_ID, gameIDFromUrl, {
+        expires: 365
+      });
+      setgameID(gameIDFromUrl);
+    } else {
+      const gameIDCookie = js_cookie__WEBPACK_IMPORTED_MODULE_2___default.a.get(GAME_ID);
+
+      if (gameIDCookie) {
+        setgameID(gameIDCookie);
+      } else {
+        const newId = Object(uuid__WEBPACK_IMPORTED_MODULE_1__["v4"])();
+        js_cookie__WEBPACK_IMPORTED_MODULE_2___default.a.set(GAME_ID, newId, {
+          expires: 365
+        });
+        setgameID(newId);
+      }
+    }
+  }, [gameIDFromUrl]);
+  react__WEBPACK_IMPORTED_MODULE_0___default.a.useEffect(() => {
+    if (gameID && userID) {
+      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["getGame"])(gameID, userID).then(gameFromDB => {
+        setGame(gameFromDB);
+      }).catch(error => {
+        setError(error);
+      });
+    }
+  }, [gameID, userID]);
+  return [game, error];
+}
+function useGetGameID() {
+  const [game] = useGetGame(undefined);
+  const gameID = game && game.id;
+  return gameID;
+}
+
+/***/ }),
+
 /***/ "./effects/user.ts":
 /*!*************************!*\
   !*** ./effects/user.ts ***!
   \*************************/
-/*! exports provided: useGetUser */
+/*! exports provided: useGetUser, useGetUserID */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useGetUser", function() { return useGetUser; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useGetUserID", function() { return useGetUserID; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! uuid */ "uuid");
@@ -199,30 +322,41 @@ __webpack_require__.r(__webpack_exports__);
 
 const USER_ID = "user_id";
 function useGetUser() {
-  const [userId, setUserId] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState();
+  const [userID, setUserID] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState();
   const [user, setUser] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState();
   const [error, setError] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState();
   react__WEBPACK_IMPORTED_MODULE_0___default.a.useEffect(() => {
     const userIDCookie = js_cookie__WEBPACK_IMPORTED_MODULE_2___default.a.get(USER_ID);
 
     if (userIDCookie) {
-      setUserId(userIDCookie);
+      setUserID(userIDCookie);
     } else {
-      const newId = Object(uuid__WEBPACK_IMPORTED_MODULE_1__["v4"])();
-      js_cookie__WEBPACK_IMPORTED_MODULE_2___default.a.set(USER_ID, newId, {
+      const newID = Object(uuid__WEBPACK_IMPORTED_MODULE_1__["v4"])();
+      js_cookie__WEBPACK_IMPORTED_MODULE_2___default.a.set(USER_ID, newID, {
         expires: 365
       });
-      setUserId(newId);
+      setUserID(newID);
     }
   }, []);
   react__WEBPACK_IMPORTED_MODULE_0___default.a.useEffect(() => {
-    if (userId) {
-      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["getUser"])(userId).then(userFromDB => setUser(userFromDB)).catch(error => {
+    if (userID) {
+      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["getUser"])(userID).then(userFromDB => {
+        setUser(userFromDB);
+      }).catch(error => {
         setError(error);
       });
     }
-  }, [userId]);
+  }, [userID]);
+
+  if (error) {
+    console.error(error);
+  }
+
   return [user, error];
+}
+function useGetUserID() {
+  const [user] = useGetUser();
+  return user && user.id;
 }
 
 /***/ }),
@@ -240,8 +374,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../effects/user */ "./effects/user.ts");
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./style.scss */ "./pages/style.scss");
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_style_scss__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _effects_game__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../effects/game */ "./effects/game.ts");
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./style.scss */ "./pages/style.scss");
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_style_scss__WEBPACK_IMPORTED_MODULE_3__);
 var _jsxFileName = "/Users/sean/Workspace/darts/pages/_app.jsx";
 var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
 
@@ -250,21 +385,22 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 
 
+
 function App({
   Component,
   pageProps
 }) {
-  const [user, error] = Object(_effects_user__WEBPACK_IMPORTED_MODULE_1__["useGetUser"])();
+  const [user, userError] = Object(_effects_user__WEBPACK_IMPORTED_MODULE_1__["useGetUser"])();
 
-  if (error) {
+  if (userError) {
     return __jsx("div", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 9,
+        lineNumber: 10,
         columnNumber: 12
       }
-    }, error.message);
+    }, userError.message);
   }
 
   if (!user) {
@@ -272,7 +408,7 @@ function App({
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 13,
+        lineNumber: 14,
         columnNumber: 12
       }
     }, "Loading...");
@@ -283,7 +419,7 @@ function App({
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 16,
+      lineNumber: 17,
       columnNumber: 10
     }
   }));
@@ -314,14 +450,14 @@ module.exports = __webpack_require__(/*! private-next-pages/_app.jsx */"./pages/
 
 /***/ }),
 
-/***/ "firebase":
-/*!***************************!*\
-  !*** external "firebase" ***!
-  \***************************/
+/***/ "firebase/app":
+/*!*******************************!*\
+  !*** external "firebase/app" ***!
+  \*******************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = require("firebase");
+module.exports = require("firebase/app");
 
 /***/ }),
 

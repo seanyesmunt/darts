@@ -88,10 +88,144 @@ module.exports =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ({
+
+/***/ "./api/firebase.ts":
+/*!*************************!*\
+  !*** ./api/firebase.ts ***!
+  \*************************/
+/*! exports provided: getUser, getGame, getGameId */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getUser", function() { return getUser; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
+/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! firebase/app */ "firebase/app");
+/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(firebase_app__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! firebase/database */ "firebase/database");
+/* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(firebase_database__WEBPACK_IMPORTED_MODULE_1__);
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+
+const config = {
+  apiKey: "AIzaSyDp01-0TwxRjNC05CuDcpauXRyLSMv0RRw",
+  authDomain: "darts-yeslab.firebaseapp.com",
+  databaseURL: "https://darts-yeslab.firebaseio.com",
+  projectId: "darts-yeslab",
+  storageBucket: "darts-yeslab.appspot.com",
+  messagingSenderId: "426404952698",
+  appId: "1:426404952698:web:738ac9ab1342a1177419c3",
+  measurementId: "G-7DHLMBZXEN"
+};
+
+if (!firebase_app__WEBPACK_IMPORTED_MODULE_0__["apps"].length) {
+  firebase_app__WEBPACK_IMPORTED_MODULE_0__["initializeApp"](config);
+}
+
+firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"](); // DB types
+
+function getUser(userID) {
+  return firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("/users/" + userID).once("value").then(function (snapshot) {
+    const user = snapshot.val();
+
+    if (user) {
+      return _objectSpread({}, user, {
+        id: userID
+      });
+    }
+
+    return createUser(userID);
+  });
+}
+
+function createUser(userID) {
+  const user = {
+    created_at: Date.now()
+  };
+  return new Promise((resolve, reject) => {
+    firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("users/" + userID).set(user, error => {
+      if (error) {
+        reject(error);
+      }
+
+      resolve(_objectSpread({}, user, {
+        id: userID
+      }));
+    });
+  });
+}
+
+function getGame(gameID, userID) {
+  return firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("/games/" + gameID).once("value").then(function (snapshot) {
+    const game = snapshot.val();
+
+    if (game) {
+      return _objectSpread({}, game, {
+        id: gameID
+      });
+    }
+
+    return createGame(gameID, userID);
+  });
+}
+function getGameId(join_id) {
+  return new Promise((resolve, reject) => {
+    firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
+      snapshot.forEach(function (data) {
+        const id = data.key;
+
+        if (!id) {
+          reject("Game not found.");
+        } else {
+          resolve(id);
+        }
+      });
+    });
+  });
+}
+
+function createGame(gameID, userId) {
+  const game = {
+    creator_id: userId,
+    join_id: gameID.slice(0, 4)
+  };
+  return new Promise((resolve, reject) => {
+    firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("games/" + gameID).set(game, error => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(_objectSpread({}, game, {
+          id: gameID
+        }));
+      }
+    });
+  });
+} // const data = {
+//   games: {
+//     "one": {
+//       creator: "user_id",
+//       timestamp: 000,
+//       code: "7yzh"
+//     },
+//     "two": {
+//       creator: "user_id",
+//       timestamp: 000,
+//       code: "8n0a"
+//     }
+//   }
+// }
+
+/***/ }),
 
 /***/ "./node_modules/@babel/runtime/helpers/interopRequireDefault.js":
 /*!**********************************************************************!*\
@@ -1782,49 +1916,129 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var next_link__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! next/link */ "./node_modules/next/link.js");
 /* harmony import */ var next_link__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(next_link__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! next/router */ "next/router");
+/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(next_router__WEBPACK_IMPORTED_MODULE_3__);
 var _jsxFileName = "/Users/sean/Workspace/darts/pages/index.tsx";
 var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
 
 
-function Home() {
-  const id = 1;
-  return __jsx("main", {
+
+
+function Home(props) {
+  const {
+    game
+  } = props;
+  const router = Object(next_router__WEBPACK_IMPORTED_MODULE_3__["useRouter"])();
+  const [isJoiningGame, setIsJoiningGame] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState(false);
+  const [gameIDToJoin, setGameIDToJoin] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState("");
+
+  function handleJoinGame(e) {
+    e.preventDefault();
+    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_2__["getGameId"])(gameIDToJoin).then(gameId => {
+      router.push(`/game/${gameId}`);
+    }).catch(console.error);
+  }
+
+  return __jsx("div", {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 8,
+      lineNumber: 27,
       columnNumber: 5
     }
-  }, __jsx(next_link__WEBPACK_IMPORTED_MODULE_1___default.a, {
-    href: `game/${id}`,
+  }, __jsx("main", {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 9,
+      lineNumber: 28,
       columnNumber: 7
+    }
+  }, !isJoiningGame && __jsx(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 30,
+      columnNumber: 11
+    }
+  }, __jsx(next_link__WEBPACK_IMPORTED_MODULE_1___default.a, {
+    href: "/game",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 31,
+      columnNumber: 13
     }
   }, __jsx("a", {
     className: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 10,
-      columnNumber: 9
+      lineNumber: 32,
+      columnNumber: 15
     }
   }, "Create Game")), __jsx("button", {
+    onClick: () => setIsJoiningGame(true),
     className: "bg-green-500 hover:bg-green-400 text-white font-bold py-2 px-4 border-b-4 border-green-700 hover:border-green-500 rounded",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 14,
-      columnNumber: 7
+      lineNumber: 36,
+      columnNumber: 13
     }
-  }, "Join Game"));
+  }, "Join Game")), isJoiningGame && __jsx("div", {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 46,
+      columnNumber: 11
+    }
+  }, __jsx("form", {
+    onSubmit: handleJoinGame,
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 47,
+      columnNumber: 13
+    }
+  }, __jsx("label", {
+    className: "text-gray-700",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 48,
+      columnNumber: 15
+    }
+  }, "ID to join"), __jsx("input", {
+    autoComplete: "off",
+    className: "block shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline",
+    id: "username",
+    type: "text",
+    placeholder: "4b90",
+    value: gameIDToJoin,
+    onChange: e => setGameIDToJoin(e.target.value),
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 49,
+      columnNumber: 15
+    }
+  }), __jsx("button", {
+    type: "submit",
+    className: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded",
+    onClick: handleJoinGame,
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 58,
+      columnNumber: 15
+    }
+  }, "Join Game")))));
 }
 
 /***/ }),
 
-/***/ 3:
+/***/ 5:
 /*!*******************************!*\
   !*** multi ./pages/index.tsx ***!
   \*******************************/
@@ -1833,6 +2047,39 @@ function Home() {
 
 module.exports = __webpack_require__(/*! /Users/sean/Workspace/darts/pages/index.tsx */"./pages/index.tsx");
 
+
+/***/ }),
+
+/***/ "firebase/app":
+/*!*******************************!*\
+  !*** external "firebase/app" ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("firebase/app");
+
+/***/ }),
+
+/***/ "firebase/database":
+/*!************************************!*\
+  !*** external "firebase/database" ***!
+  \************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("firebase/database");
+
+/***/ }),
+
+/***/ "next/router":
+/*!******************************!*\
+  !*** external "next/router" ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("next/router");
 
 /***/ }),
 
