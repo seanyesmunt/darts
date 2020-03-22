@@ -1,4 +1,5 @@
 import React from "react";
+import classnames from "classnames";
 import { useGetUserID } from "../effects/user";
 import { updateScore } from "../api/firebase";
 
@@ -10,47 +11,52 @@ function ScoreRow(props) {
   function handleUpdateScore(newScore) {
     updateScore(gameID, userID, number, newScore);
   }
+  //   <span className="">{score || 0}</span>
 
   return (
-    <div className="score__item p-5">
-      <span className="mr-10">{score || 0}</span>
-      {isMine ? (
-        <div className="inline-flex">
-          <button
-            onClick={() => handleUpdateScore(score + 1)}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l"
-          >
-            +
-          </button>
-          <button
-            onClick={() => handleUpdateScore(score - 1)}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r"
-          >
-            -
-          </button>
-        </div>
-      ) : null}
+    <div className="score__item flex items-stretch relative">
+      {isMine && (
+        <button
+          onClick={() => handleUpdateScore(score + 1)}
+          className="flex-1 bg-teal-600 hover:bg-teal-500 text-white hover:bg-gray-300 font-bold w-100"
+        >
+          {score}
+        </button>
+      )}
     </div>
   );
 }
 
 export default function Game(props) {
   const { join_id, players, id: gameID } = props;
+  const userID = useGetUserID();
 
   return (
-    <div className="pl-10">
-      <div className="text-gray-600">#{join_id}</div>
-
+    <div className="mt-10 bg-teal-700 chalk text-white rounded">
       <div className="flex">
-        <div className="score__column">
+        <div className="score__column flex flex-col justify-center align-center">
           {["", 15, 16, 17, 18, 19, 20, "bull"].map(value => {
-            return <div className="score__item pr-10">{value}</div>;
+            return (
+              <div className="score__item px-2 flex items-center justify-center">
+                <span>{value}</span>
+              </div>
+            );
           })}
         </div>
         {players.map(({ id, name, score }) => {
+          const isMine = id === userID;
           return (
             <div className="score__column">
-              <div className="score__item border-gray-200 p-5">{name}</div>
+              <div
+                className={classnames(
+                  "score__item text-center border-gray-200 p-5",
+                  {
+                    "bg-teal-600": isMine
+                  }
+                )}
+              >
+                {name}
+              </div>
               {Object.keys(score).map(number => {
                 const scoreForNumber = score[number];
                 return (

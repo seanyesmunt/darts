@@ -415,10 +415,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return App; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../effects/user */ "./effects/user.ts");
-/* harmony import */ var _effects_game__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../effects/game */ "./effects/game.ts");
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./style.scss */ "./pages/style.scss");
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_style_scss__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var next_head__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! next/head */ "next/head");
+/* harmony import */ var next_head__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(next_head__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../effects/user */ "./effects/user.ts");
+/* harmony import */ var _effects_game__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../effects/game */ "./effects/game.ts");
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./style.scss */ "./pages/style.scss");
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_style_scss__WEBPACK_IMPORTED_MODULE_4__);
 var _jsxFileName = "/Users/sean/Workspace/darts/pages/_app.jsx";
 var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
 
@@ -428,43 +430,60 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 
 
+
 function App({
   Component,
   pageProps
 }) {
-  const [user, userError] = Object(_effects_user__WEBPACK_IMPORTED_MODULE_1__["useGetUser"])();
+  const [user, userError] = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUser"])();
 
   if (userError) {
     return __jsx("div", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 10,
+        lineNumber: 11,
         columnNumber: 12
       }
     }, userError.message);
   }
 
   if (!user) {
-    return __jsx("div", {
-      __self: this,
-      __source: {
-        fileName: _jsxFileName,
-        lineNumber: 14,
-        columnNumber: 12
-      }
-    }, "Loading...");
+    return null;
   }
 
-  return __jsx(Component, _extends({}, pageProps, {
+  return __jsx(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 19,
+      columnNumber: 5
+    }
+  }, __jsx(next_head__WEBPACK_IMPORTED_MODULE_1___default.a, {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 20,
+      columnNumber: 7
+    }
+  }, __jsx("link", {
+    href: "https://fonts.googleapis.com/css?family=Noto+Serif:700|Roboto&display=swap",
+    rel: "stylesheet",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 21,
+      columnNumber: 9
+    }
+  })), __jsx(Component, _extends({}, pageProps, {
     user: user,
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 17,
-      columnNumber: 10
+      lineNumber: 26,
+      columnNumber: 7
     }
-  }));
+  })));
 }
 
 /***/ }),
@@ -522,6 +541,17 @@ module.exports = require("firebase/database");
 /***/ (function(module, exports) {
 
 module.exports = require("js-cookie");
+
+/***/ }),
+
+/***/ "next/head":
+/*!****************************!*\
+  !*** external "next/head" ***!
+  \****************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("next/head");
 
 /***/ }),
 
