@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import * as firebase from "firebase/app";
 import "firebase/database";
 
@@ -16,7 +17,7 @@ if (!firebase.apps.length) {
   firebase.initializeApp(config);
 }
 
-firebase.database();
+const db = firebase.database();
 
 // DB types
 declare global {
@@ -25,10 +26,20 @@ declare global {
     created_at: number;
   }
 
+  interface Options {
+    name: string;
+  }
+
+  interface Player {
+    id: string;
+    name: string;
+  }
+
   interface Game {
     id: string;
     creator_id: string;
     join_id: string;
+    players: Array<Player>;
   }
 
   interface Error {
@@ -37,8 +48,7 @@ declare global {
 }
 
 export function getUser(userID: string): Promise<User> {
-  return firebase
-    .database()
+  return db
     .ref("/users/" + userID)
     .once("value")
     .then(function(snapshot) {
@@ -57,39 +67,32 @@ function createUser(userID): Promise<User> {
   };
 
   return new Promise((resolve, reject) => {
-    firebase
-      .database()
-      .ref("users/" + userID)
-      .set(user, error => {
-        if (error) {
-          reject(error);
-        }
+    db.ref("users/" + userID).set(user, error => {
+      if (error) {
+        reject(error);
+      }
 
-        resolve({ ...user, id: userID });
-      });
+      resolve({ ...user, id: userID });
+    });
   });
 }
 
-export function getGame(gameID: string, userID: string): Promise<Game> {
-  return firebase
-    .database()
-    .ref("/games/" + gameID)
-    .once("value")
-    .then(function(snapshot) {
+export function getGame(
+  gameID: string,
+  userID: string,
+  onUpdate: any
+): Promise<Game> {
+  return new Promise((resolve, reject) => {
+    db.ref("/games/" + gameID).on("value", snapshot => {
       const game = snapshot.val();
-      if (game) {
-        return { ...game, id: gameID };
-      }
-
-      return createGame(gameID, userID);
+      onUpdate(game);
     });
+  });
 }
 
 export function getGameId(join_id: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    firebase
-      .database()
-      .ref("games")
+    db.ref("games")
       .orderByChild("join_id")
       .equalTo(join_id)
       .on("value", function(snapshot) {
@@ -105,21 +108,49 @@ export function getGameId(join_id: string): Promise<string> {
   });
 }
 
-function createGame(gameID, userId): Promise<Game> {
+export function createGame(userID, name): Promise<Game> {
+  const gameID = uuidv4();
+
   const game = {
-    creator_id: userId,
-    join_id: gameID.slice(0, 4)
+    creator_id: userID,
+    join_id: gameID.slice(0, 4),
+    players: [
+      {
+        id: userID,
+        name
+      }
+    ]
   };
 
   return new Promise((resolve, reject) => {
-    firebase
-      .database()
-      .ref("games/" + gameID)
-      .set(game, error => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve({ ...game, id: gameID });
+    db.ref("games/" + gameID).set(game, error => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve({ ...game, id: gameID });
+      }
+    });
+  });
+}
+
+export function addPlayerToGame(gameID, userID, name) {
+  return new Promise((resolve, reject) => {
+    db.ref("games/" + gameID)
+      .once("value")
+      .then(snapshot => {
+        const game = snapshot.val();
+
+        if (!game.players.some(player => player.id === userID)) {
+          const newGame = {
+            ...game,
+            players: game.players.concat({ id: userID, name })
+          };
+
+          db.ref("games/" + gameID).update(newGame, error => {
+            if (error) {
+              console.error("error", error);
+            }
+          });
         }
       });
   });

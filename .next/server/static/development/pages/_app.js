@@ -97,7 +97,7 @@ module.exports =
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, getGame, getGameId */
+/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -105,15 +105,20 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getUser", function() { return getUser; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
-/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! firebase/app */ "firebase/app");
-/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(firebase_app__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! firebase/database */ "firebase/database");
-/* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(firebase_database__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createGame", function() { return createGame; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "uuid");
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(uuid__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! firebase/app */ "firebase/app");
+/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(firebase_app__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! firebase/database */ "firebase/database");
+/* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(firebase_database__WEBPACK_IMPORTED_MODULE_2__);
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 
 
 
@@ -128,14 +133,14 @@ const config = {
   measurementId: "G-7DHLMBZXEN"
 };
 
-if (!firebase_app__WEBPACK_IMPORTED_MODULE_0__["apps"].length) {
-  firebase_app__WEBPACK_IMPORTED_MODULE_0__["initializeApp"](config);
+if (!firebase_app__WEBPACK_IMPORTED_MODULE_1__["apps"].length) {
+  firebase_app__WEBPACK_IMPORTED_MODULE_1__["initializeApp"](config);
 }
 
-firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"](); // DB types
+const db = firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"](); // DB types
 
 function getUser(userID) {
-  return firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("/users/" + userID).once("value").then(function (snapshot) {
+  return db.ref("/users/" + userID).once("value").then(function (snapshot) {
     const user = snapshot.val();
 
     if (user) {
@@ -153,7 +158,7 @@ function createUser(userID) {
     created_at: Date.now()
   };
   return new Promise((resolve, reject) => {
-    firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("users/" + userID).set(user, error => {
+    db.ref("users/" + userID).set(user, error => {
       if (error) {
         reject(error);
       }
@@ -165,22 +170,17 @@ function createUser(userID) {
   });
 }
 
-function getGame(gameID, userID) {
-  return firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("/games/" + gameID).once("value").then(function (snapshot) {
-    const game = snapshot.val();
-
-    if (game) {
-      return _objectSpread({}, game, {
-        id: gameID
-      });
-    }
-
-    return createGame(gameID, userID);
+function getGame(gameID, userID, onUpdate) {
+  return new Promise((resolve, reject) => {
+    db.ref("/games/" + gameID).on("value", snapshot => {
+      const game = snapshot.val();
+      onUpdate(game);
+    });
   });
 }
 function getGameId(join_id) {
   return new Promise((resolve, reject) => {
-    firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
+    db.ref("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
       snapshot.forEach(function (data) {
         const id = data.key;
 
@@ -193,20 +193,46 @@ function getGameId(join_id) {
     });
   });
 }
-
-function createGame(gameID, userId) {
+function createGame(userID, name) {
+  const gameID = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
   const game = {
-    creator_id: userId,
-    join_id: gameID.slice(0, 4)
+    creator_id: userID,
+    join_id: gameID.slice(0, 4),
+    players: [{
+      id: userID,
+      name
+    }]
   };
   return new Promise((resolve, reject) => {
-    firebase_app__WEBPACK_IMPORTED_MODULE_0__["database"]().ref("games/" + gameID).set(game, error => {
+    db.ref("games/" + gameID).set(game, error => {
       if (error) {
         reject(error);
       } else {
         resolve(_objectSpread({}, game, {
           id: gameID
         }));
+      }
+    });
+  });
+}
+function addPlayerToGame(gameID, userID, name) {
+  return new Promise((resolve, reject) => {
+    db.ref("games/" + gameID).once("value").then(snapshot => {
+      const game = snapshot.val();
+
+      if (!game.players.some(player => player.id === userID)) {
+        const newGame = _objectSpread({}, game, {
+          players: game.players.concat({
+            id: userID,
+            name
+          })
+        });
+
+        db.ref("games/" + gameID).update(newGame, error => {
+          if (error) {
+            console.error("error", error);
+          }
+        });
       }
     });
   });
@@ -240,52 +266,31 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useGetGameID", function() { return useGetGameID; });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "react");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! uuid */ "uuid");
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(uuid__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! js-cookie */ "js-cookie");
-/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
-/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./user */ "./effects/user.ts");
+/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./user */ "./effects/user.ts");
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 
 
 
 const GAME_ID = "game_id";
-function useGetGame(gameIDFromUrl) {
-  console.log("gameID", gameIDFromUrl);
-  const userID = Object(_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])();
-  const [gameID, setgameID] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState(gameIDFromUrl);
+function useGetGame(gameID) {
+  const userID = Object(_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
   const [game, setGame] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState();
   const [error, setError] = react__WEBPACK_IMPORTED_MODULE_0___default.a.useState();
   react__WEBPACK_IMPORTED_MODULE_0___default.a.useEffect(() => {
-    if (gameIDFromUrl) {
-      setgameID(gameIDFromUrl);
-      js_cookie__WEBPACK_IMPORTED_MODULE_2___default.a.set(GAME_ID, gameIDFromUrl, {
-        expires: 365
-      });
-      setgameID(gameIDFromUrl);
-    } else {
-      const gameIDCookie = js_cookie__WEBPACK_IMPORTED_MODULE_2___default.a.get(GAME_ID);
-
-      if (gameIDCookie) {
-        setgameID(gameIDCookie);
-      } else {
-        const newId = Object(uuid__WEBPACK_IMPORTED_MODULE_1__["v4"])();
-        js_cookie__WEBPACK_IMPORTED_MODULE_2___default.a.set(GAME_ID, newId, {
-          expires: 365
-        });
-        setgameID(newId);
-      }
+    function onUpdate(value) {
+      setGame(_objectSpread({}, value, {
+        id: gameID
+      }));
     }
-  }, [gameIDFromUrl]);
-  react__WEBPACK_IMPORTED_MODULE_0___default.a.useEffect(() => {
+
     if (gameID && userID) {
-      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["getGame"])(gameID, userID).then(gameFromDB => {
-        setGame(gameFromDB);
-      }).catch(error => {
-        setError(error);
-      });
+      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_1__["getGame"])(gameID, userID, onUpdate);
     }
   }, [gameID, userID]);
   return [game, error];

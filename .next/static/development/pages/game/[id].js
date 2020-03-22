@@ -4,7 +4,7 @@
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, getGame, getGameId */
+/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -12,15 +12,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getUser", function() { return getUser; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createGame", function() { return createGame; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
 /* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
-/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! firebase/app */ "./node_modules/firebase/app/dist/index.cjs.js");
-/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(firebase_app__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! firebase/database */ "./node_modules/firebase/database/dist/index.esm.js");
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
+/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! firebase/app */ "./node_modules/firebase/app/dist/index.cjs.js");
+/* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(firebase_app__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var firebase_database__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! firebase/database */ "./node_modules/firebase/database/dist/index.esm.js");
 
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { Object(_babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
 
 
 
@@ -35,14 +39,14 @@ var config = {
   measurementId: "G-7DHLMBZXEN"
 };
 
-if (!firebase_app__WEBPACK_IMPORTED_MODULE_1__["apps"].length) {
-  firebase_app__WEBPACK_IMPORTED_MODULE_1__["initializeApp"](config);
+if (!firebase_app__WEBPACK_IMPORTED_MODULE_2__["apps"].length) {
+  firebase_app__WEBPACK_IMPORTED_MODULE_2__["initializeApp"](config);
 }
 
-firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"](); // DB types
+var db = firebase_app__WEBPACK_IMPORTED_MODULE_2__["database"](); // DB types
 
 function getUser(userID) {
-  return firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"]().ref("/users/" + userID).once("value").then(function (snapshot) {
+  return db.ref("/users/" + userID).once("value").then(function (snapshot) {
     var user = snapshot.val();
 
     if (user) {
@@ -60,7 +64,7 @@ function createUser(userID) {
     created_at: Date.now()
   };
   return new Promise(function (resolve, reject) {
-    firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"]().ref("users/" + userID).set(user, function (error) {
+    db.ref("users/" + userID).set(user, function (error) {
       if (error) {
         reject(error);
       }
@@ -72,22 +76,17 @@ function createUser(userID) {
   });
 }
 
-function getGame(gameID, userID) {
-  return firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"]().ref("/games/" + gameID).once("value").then(function (snapshot) {
-    var game = snapshot.val();
-
-    if (game) {
-      return _objectSpread({}, game, {
-        id: gameID
-      });
-    }
-
-    return createGame(gameID, userID);
+function getGame(gameID, userID, onUpdate) {
+  return new Promise(function (resolve, reject) {
+    db.ref("/games/" + gameID).on("value", function (snapshot) {
+      var game = snapshot.val();
+      onUpdate(game);
+    });
   });
 }
 function getGameId(join_id) {
   return new Promise(function (resolve, reject) {
-    firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"]().ref("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
+    db.ref("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
       snapshot.forEach(function (data) {
         var id = data.key;
 
@@ -100,20 +99,48 @@ function getGameId(join_id) {
     });
   });
 }
-
-function createGame(gameID, userId) {
+function createGame(userID, name) {
+  var gameID = Object(uuid__WEBPACK_IMPORTED_MODULE_1__["v4"])();
   var game = {
-    creator_id: userId,
-    join_id: gameID.slice(0, 4)
+    creator_id: userID,
+    join_id: gameID.slice(0, 4),
+    players: [{
+      id: userID,
+      name: name
+    }]
   };
   return new Promise(function (resolve, reject) {
-    firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"]().ref("games/" + gameID).set(game, function (error) {
+    db.ref("games/" + gameID).set(game, function (error) {
       if (error) {
         reject(error);
       } else {
         resolve(_objectSpread({}, game, {
           id: gameID
         }));
+      }
+    });
+  });
+}
+function addPlayerToGame(gameID, userID, name) {
+  return new Promise(function (resolve, reject) {
+    db.ref("games/" + gameID).once("value").then(function (snapshot) {
+      var game = snapshot.val();
+
+      if (!game.players.some(function (player) {
+        return player.id === userID;
+      })) {
+        var newGame = _objectSpread({}, game, {
+          players: game.players.concat({
+            id: userID,
+            name: name
+          })
+        });
+
+        db.ref("games/" + gameID).update(newGame, function (error) {
+          if (error) {
+            console.error("error", error);
+          }
+        });
       }
     });
   });
@@ -145,75 +172,52 @@ function createGame(gameID, userId) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useGetGame", function() { return useGetGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "useGetGameID", function() { return useGetGameID; });
-/* harmony import */ var _babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
-/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! js-cookie */ "./node_modules/js-cookie/src/js.cookie.js");
-/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
-/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./user */ "./effects/user.ts");
+/* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
+/* harmony import */ var _babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var _user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./user */ "./effects/user.ts");
 
 
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { Object(_babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 
 
 
 var GAME_ID = "game_id";
-function useGetGame(gameIDFromUrl) {
-  console.log("gameID", gameIDFromUrl);
-  var userID = Object(_user__WEBPACK_IMPORTED_MODULE_5__["useGetUserID"])();
+function useGetGame(gameID) {
+  var userID = Object(_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])();
 
-  var _React$useState = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(gameIDFromUrl),
-      _React$useState2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_React$useState, 2),
-      gameID = _React$useState2[0],
-      setgameID = _React$useState2[1];
+  var _React$useState = react__WEBPACK_IMPORTED_MODULE_2___default.a.useState(),
+      _React$useState2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_1__["default"])(_React$useState, 2),
+      game = _React$useState2[0],
+      setGame = _React$useState2[1];
 
-  var _React$useState3 = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(),
-      _React$useState4 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_React$useState3, 2),
-      game = _React$useState4[0],
-      setGame = _React$useState4[1];
+  var _React$useState3 = react__WEBPACK_IMPORTED_MODULE_2___default.a.useState(),
+      _React$useState4 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_1__["default"])(_React$useState3, 2),
+      error = _React$useState4[0],
+      setError = _React$useState4[1];
 
-  var _React$useState5 = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(),
-      _React$useState6 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_React$useState5, 2),
-      error = _React$useState6[0],
-      setError = _React$useState6[1];
-
-  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(function () {
-    if (gameIDFromUrl) {
-      setgameID(gameIDFromUrl);
-      js_cookie__WEBPACK_IMPORTED_MODULE_3___default.a.set(GAME_ID, gameIDFromUrl, {
-        expires: 365
-      });
-      setgameID(gameIDFromUrl);
-    } else {
-      var gameIDCookie = js_cookie__WEBPACK_IMPORTED_MODULE_3___default.a.get(GAME_ID);
-
-      if (gameIDCookie) {
-        setgameID(gameIDCookie);
-      } else {
-        var newId = Object(uuid__WEBPACK_IMPORTED_MODULE_2__["v4"])();
-        js_cookie__WEBPACK_IMPORTED_MODULE_3___default.a.set(GAME_ID, newId, {
-          expires: 365
-        });
-        setgameID(newId);
-      }
+  react__WEBPACK_IMPORTED_MODULE_2___default.a.useEffect(function () {
+    function onUpdate(value) {
+      setGame(_objectSpread({}, value, {
+        id: gameID
+      }));
     }
-  }, [gameIDFromUrl]);
-  react__WEBPACK_IMPORTED_MODULE_1___default.a.useEffect(function () {
+
     if (gameID && userID) {
-      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_4__["getGame"])(gameID, userID).then(function (gameFromDB) {
-        setGame(gameFromDB);
-      })["catch"](function (error) {
-        setError(error);
-      });
+      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["getGame"])(gameID, userID, onUpdate);
     }
   }, [gameID, userID]);
   return [game, error];
 }
 function useGetGameID() {
   var _useGetGame = useGetGame(undefined),
-      _useGetGame2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_useGetGame, 1),
+      _useGetGame2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_1__["default"])(_useGetGame, 1),
       game = _useGetGame2[0];
 
   var gameID = game && game.id;
@@ -23091,13 +23095,24 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! next/router */ "./node_modules/next/dist/client/router.js");
 /* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(next_router__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _effects_game__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../effects/game */ "./effects/game.ts");
+/* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../effects/user */ "./effects/user.ts");
+/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../api/firebase */ "./api/firebase.ts");
 
 var _jsxFileName = "/Users/sean/Workspace/darts/pages/game/[id].tsx";
-
 var __jsx = react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement;
 
 
+
+
+
 function Game(props) {
+  var _this = this;
+
+  var _React$useState = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(""),
+      _React$useState2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_React$useState, 2),
+      name = _React$useState2[0],
+      setName = _React$useState2[1];
+
   var router = Object(next_router__WEBPACK_IMPORTED_MODULE_2__["useRouter"])();
   var id = router.query.id;
 
@@ -23105,29 +23120,118 @@ function Game(props) {
       _useGetGame2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_useGetGame, 1),
       game = _useGetGame2[0];
 
-  console.log("game", game);
+  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])();
+  var creatorID = game && game.creator_id;
+  var players = game && game.players;
+  var gameID = game && game.id;
+  var isInGame = players && players.some(function (player) {
+    return player.id === userID;
+  }); // React.useEffect(() => {
+  //   if (gameID && !amIncludedInListOfPlayers && creatorID !== userID) {
+  //     // addPlayerToGame(gameID, userID);
+  //   }
+  // }, [amIncludedInListOfPlayers, creatorID, userID, gameID]);
+
+  function handleJoinGame() {
+    if (gameID && !isInGame && creatorID !== userID) {
+      Object(_api_firebase__WEBPACK_IMPORTED_MODULE_5__["addPlayerToGame"])(gameID, userID, name);
+    }
+  }
+
   return __jsx("div", {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 16,
+      lineNumber: 40,
       columnNumber: 5
     }
   }, __jsx("main", {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 17,
+      lineNumber: 41,
       columnNumber: 7
     }
-  }, game && __jsx("div", {
+  }, isInGame && __jsx("div", {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 17,
-      columnNumber: 22
+      lineNumber: 43,
+      columnNumber: 11
     }
-  }, "ID: ", game.join_id)));
+  }, __jsx("div", {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 44,
+      columnNumber: 13
+    }
+  }, "ID: ", game.join_id), __jsx("div", {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 45,
+      columnNumber: 13
+    }
+  }, "Players"), __jsx("ol", {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 46,
+      columnNumber: 13
+    }
+  }, players.map(function (player) {
+    return __jsx("li", {
+      key: player.id,
+      __self: _this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 48,
+        columnNumber: 17
+      }
+    }, player.name);
+  }))), !isInGame && __jsx("form", {
+    onSubmit: handleJoinGame,
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 54,
+      columnNumber: 11
+    }
+  }, __jsx("label", {
+    className: "text-gray-700",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 55,
+      columnNumber: 13
+    }
+  }, "Enter your name"), __jsx("input", {
+    autoComplete: "off",
+    className: "block shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline",
+    id: "username",
+    type: "text",
+    placeholder: "Big winner Stevey Jones",
+    value: name,
+    onChange: function onChange(e) {
+      return setName(e.target.value);
+    },
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 56,
+      columnNumber: 13
+    }
+  }), __jsx("button", {
+    type: "submit",
+    className: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 65,
+      columnNumber: 13
+    }
+  }, "Join Game"))));
 }
 
 /***/ }),
