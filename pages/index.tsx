@@ -32,20 +32,20 @@ export default function Home(props: Props) {
 
   return (
     <Page>
-      <main className="flex flex-1 items-center justify-center">
+      <main className="chalk flex flex-1 items-center justify-center bg-teal-700 text-white">
         {!isJoiningGame && !isCreatingGame && (
           <div className="">
-            <h1 className="font-bold text-6xl">Darts... Right Now</h1>
+            <h1 className="font-bold text-6xl">darts.now.sh</h1>
             <div className="flex mt-5">
               <button
                 onClick={() => setIsCreatingGame(true)}
-                className="mr-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 border-b-4 border-indigo-800 hover:border-indigo-600 rounded"
+                className="mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded"
               >
                 Start A Game
               </button>
               <button
                 onClick={() => setIsJoiningGame(true)}
-                className="bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 border-b-4 border-orange-500 hover:border-orange-500 rounded"
+                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 border-b-4 border-orange-600 hover:border-orange-700 rounded"
               >
                 Join Someones Game
               </button>
@@ -56,7 +56,7 @@ export default function Home(props: Props) {
         {isJoiningGame && (
           <div>
             <form onSubmit={handleJoinGame}>
-              <label className="text-gray-700">ID to join</label>
+              <label className="text-gray-100">ID to join</label>
               <input
                 autoFocus
                 autoComplete="off"
@@ -70,13 +70,13 @@ export default function Home(props: Props) {
               <div className="flex mt-5">
                 <button
                   type="submit"
-                  className="mr-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 border-b-4 border-indigo-800 hover:border-indigo-600 rounded"
+                  className="mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded"
                 >
                   Join Game
                 </button>
                 <button
                   onClick={() => setIsJoiningGame(false)}
-                  className="bg-gray-300 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 border-b-4 border-gray-400 hover:border-gray-300 rounded"
+                  className="mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded"
                 >
                   Cancel
                 </button>
@@ -88,7 +88,7 @@ export default function Home(props: Props) {
         {isCreatingGame && (
           <div>
             <form onSubmit={handleCreateGame}>
-              <label className="text-gray-500">Your Name</label>
+              <label className="text-white">Your Name</label>
               <input
                 autoComplete="off"
                 autoFocus
@@ -102,13 +102,13 @@ export default function Home(props: Props) {
               <div className="flex mt-5">
                 <button
                   type="submit"
-                  className="mr-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 border-b-4 border-indigo-800 hover:border-indigo-600 rounded"
+                  className="mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded"
                 >
                   Create Game
                 </button>
                 <button
                   onClick={() => setIsCreatingGame(false)}
-                  className="bg-gray-300 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 border-b-4 border-gray-400 hover:border-gray-300 rounded"
+                  className="mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded"
                 >
                   Cancel
                 </button>

@@ -9,9 +9,8 @@ function ScoreRow(props) {
   const isMine = playerID === userID;
 
   function handleUpdateScore(newScore) {
-    updateScore(gameID, userID, number, newScore);
+    updateScore(gameID, userID, number, newScore % 4);
   }
-  //   <span className="">{score || 0}</span>
 
   return (
     <div className="score__item flex items-stretch relative">
@@ -20,7 +19,7 @@ function ScoreRow(props) {
           onClick={() => handleUpdateScore(score + 1)}
           className="flex-1 bg-teal-600 hover:bg-teal-500 text-white hover:bg-gray-300 font-bold w-100"
         >
-          {score}
+          {score === 0 ? "" : score}
         </button>
       )}
     </div>
@@ -32,7 +31,7 @@ export default function Game(props) {
   const userID = useGetUserID();
 
   return (
-    <div className="mt-10 bg-teal-700 chalk text-white rounded">
+    <div className="mt-10 bg-teal-700 mx-2 chalk text-white rounded">
       <div className="flex">
         <div className="score__column flex flex-col justify-center align-center">
           {["", 15, 16, 17, 18, 19, 20, "bull"].map(value => {

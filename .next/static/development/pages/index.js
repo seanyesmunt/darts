@@ -233,7 +233,7 @@ function Header() {
 
   var joinID = game && game.join_id;
   return __jsx("nav", {
-    className: "chalk flex items-center justify-between flex-wrap p-6 border",
+    className: "chalk flex items-center justify-between flex-wrap p-6 bg-teal-900 shadow-xs text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -241,7 +241,7 @@ function Header() {
       columnNumber: 5
     }
   }, __jsx("span", {
-    className: "font-semibold text-4xl text-indigo-900 hover:text-indigo-400 tracking-tight",
+    className: "font-semibold text-4xl hover:text-teal-200 tracking-tight",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -263,7 +263,7 @@ function Header() {
       lineNumber: 16,
       columnNumber: 11
     }
-  }, "Darts... Right Now"))), joinID && __jsx("span", {
+  }, "darts.now.sh"))), joinID && __jsx("span", {
     className: "font-semibold text-4xl text-white bg-teal-700 p-2 rounded tracking-tight",
     __self: this,
     __source: {
@@ -24838,7 +24838,7 @@ function Home(props) {
       columnNumber: 5
     }
   }, __jsx("main", {
-    className: "flex flex-1 items-center justify-center",
+    className: "chalk flex flex-1 items-center justify-center bg-teal-700 text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -24861,7 +24861,7 @@ function Home(props) {
       lineNumber: 38,
       columnNumber: 13
     }
-  }, "Darts... Right Now"), __jsx("div", {
+  }, "darts.now.sh"), __jsx("div", {
     className: "flex mt-5",
     __self: this,
     __source: {
@@ -24873,7 +24873,7 @@ function Home(props) {
     onClick: function onClick() {
       return setIsCreatingGame(true);
     },
-    className: "mr-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 border-b-4 border-indigo-800 hover:border-indigo-600 rounded",
+    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -24884,7 +24884,7 @@ function Home(props) {
     onClick: function onClick() {
       return setIsJoiningGame(true);
     },
-    className: "bg-orange-400 hover:bg-orange-300 text-white font-bold py-2 px-4 border-b-4 border-orange-500 hover:border-orange-500 rounded",
+    className: "bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 border-b-4 border-orange-600 hover:border-orange-700 rounded",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -24907,7 +24907,7 @@ function Home(props) {
       columnNumber: 13
     }
   }, __jsx("label", {
-    className: "text-gray-700",
+    className: "text-gray-100",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -24940,7 +24940,7 @@ function Home(props) {
     }
   }, __jsx("button", {
     type: "submit",
-    className: "mr-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 border-b-4 border-indigo-800 hover:border-indigo-600 rounded",
+    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -24951,7 +24951,7 @@ function Home(props) {
     onClick: function onClick() {
       return setIsJoiningGame(false);
     },
-    className: "bg-gray-300 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 border-b-4 border-gray-400 hover:border-gray-300 rounded",
+    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -24974,7 +24974,7 @@ function Home(props) {
       columnNumber: 13
     }
   }, __jsx("label", {
-    className: "text-gray-500",
+    className: "text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -25008,7 +25008,7 @@ function Home(props) {
     }
   }, __jsx("button", {
     type: "submit",
-    className: "mr-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 border-b-4 border-indigo-800 hover:border-indigo-600 rounded",
+    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -25019,7 +25019,7 @@ function Home(props) {
     onClick: function onClick() {
       return setIsCreatingGame(false);
     },
-    className: "bg-gray-300 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 border-b-4 border-gray-400 hover:border-gray-300 rounded",
+    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
     __self: this,
     __source: {
       fileName: _jsxFileName,

@@ -324,16 +324,15 @@ function ScoreRow(props) {
   const isMine = playerID === userID;
 
   function handleUpdateScore(newScore) {
-    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["updateScore"])(gameID, userID, number, newScore);
-  } //   <span className="">{score || 0}</span>
-
+    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["updateScore"])(gameID, userID, number, newScore % 4);
+  }
 
   return __jsx("div", {
     className: "score__item flex items-stretch relative",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 17,
+      lineNumber: 16,
       columnNumber: 5
     }
   }, isMine && __jsx("button", {
@@ -342,10 +341,10 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 19,
+      lineNumber: 18,
       columnNumber: 9
     }
-  }, score));
+  }, score === 0 ? "" : score));
 }
 
 function Game(props) {
@@ -356,11 +355,11 @@ function Game(props) {
   } = props;
   const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
   return __jsx("div", {
-    className: "mt-10 bg-teal-700 chalk text-white rounded",
+    className: "mt-10 bg-teal-700 mx-2 chalk text-white rounded",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 35,
+      lineNumber: 34,
       columnNumber: 5
     }
   }, __jsx("div", {
@@ -368,7 +367,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 36,
+      lineNumber: 35,
       columnNumber: 7
     }
   }, __jsx("div", {
@@ -376,7 +375,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 37,
+      lineNumber: 36,
       columnNumber: 9
     }
   }, ["", 15, 16, 17, 18, 19, 20, "bull"].map(value => {
@@ -385,14 +384,14 @@ function Game(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 40,
+        lineNumber: 39,
         columnNumber: 15
       }
     }, __jsx("span", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 41,
+        lineNumber: 40,
         columnNumber: 17
       }
     }, value));
@@ -407,7 +406,7 @@ function Game(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 49,
+        lineNumber: 48,
         columnNumber: 13
       }
     }, __jsx("div", {
@@ -417,7 +416,7 @@ function Game(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 50,
+        lineNumber: 49,
         columnNumber: 15
       }
     }, name), Object.keys(score).map(number => {
@@ -431,7 +430,7 @@ function Game(props) {
         __self: this,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 63,
+          lineNumber: 62,
           columnNumber: 19
         }
       });
@@ -472,7 +471,7 @@ function Header() {
   const [game] = Object(_effects_game__WEBPACK_IMPORTED_MODULE_3__["useGetGame"])(id);
   const joinID = game && game.join_id;
   return __jsx("nav", {
-    className: "chalk flex items-center justify-between flex-wrap p-6 border",
+    className: "chalk flex items-center justify-between flex-wrap p-6 bg-teal-900 shadow-xs text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -480,7 +479,7 @@ function Header() {
       columnNumber: 5
     }
   }, __jsx("span", {
-    className: "font-semibold text-4xl text-indigo-900 hover:text-indigo-400 tracking-tight",
+    className: "font-semibold text-4xl hover:text-teal-200 tracking-tight",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -502,7 +501,7 @@ function Header() {
       lineNumber: 16,
       columnNumber: 11
     }
-  }, "Darts... Right Now"))), joinID && __jsx("span", {
+  }, "darts.now.sh"))), joinID && __jsx("span", {
     className: "font-semibold text-4xl text-white bg-teal-700 p-2 rounded tracking-tight",
     __self: this,
     __source: {
