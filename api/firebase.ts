@@ -57,12 +57,12 @@ if (!firebase.apps.length) {
 const db = firebase.database();
 
 const DEFAULT_SCORE = {
-  15: 0,
-  16: 0,
-  17: 0,
-  18: 0,
-  19: 0,
   20: 0,
+  19: 0,
+  18: 0,
+  17: 0,
+  16: 0,
+  15: 0,
   bull: 0
 };
 

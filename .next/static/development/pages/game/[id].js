@@ -47,12 +47,12 @@ if (!firebase_app__WEBPACK_IMPORTED_MODULE_2__["apps"].length) {
 
 var db = firebase_app__WEBPACK_IMPORTED_MODULE_2__["database"]();
 var DEFAULT_SCORE = {
-  15: 0,
-  16: 0,
-  17: 0,
-  18: 0,
-  19: 0,
   20: 0,
+  19: 0,
+  18: 0,
+  17: 0,
+  16: 0,
+  15: 0,
   bull: 0
 };
 function getUser(userID) {
@@ -242,6 +242,7 @@ function ScoreRow(props) {
       columnNumber: 5
     }
   }, __jsx("button", {
+    disabled: !isMine,
     onClick: function onClick() {
       return handleUpdateScore(score + 1);
     },
@@ -269,7 +270,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 34,
+      lineNumber: 35,
       columnNumber: 5
     }
   }, __jsx("div", {
@@ -277,7 +278,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 35,
+      lineNumber: 36,
       columnNumber: 7
     }
   }, __jsx("div", {
@@ -285,23 +286,23 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 36,
+      lineNumber: 37,
       columnNumber: 9
     }
-  }, ["", 15, 16, 17, 18, 19, 20, "bull"].map(function (value) {
+  }, ["", 20, 19, 18, 17, 16, 15, "bull"].map(function (value) {
     return __jsx("div", {
       className: "score__item px-2 flex items-center justify-center",
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 39,
+        lineNumber: 40,
         columnNumber: 15
       }
     }, __jsx("span", {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 40,
+        lineNumber: 41,
         columnNumber: 17
       }
     }, value));
@@ -315,7 +316,7 @@ function Game(props) {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 48,
+        lineNumber: 49,
         columnNumber: 13
       }
     }, __jsx("div", {
@@ -325,10 +326,21 @@ function Game(props) {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 49,
+        lineNumber: 50,
         columnNumber: 15
       }
-    }, name), Object.keys(score).map(function (number) {
+    }, name), Object.keys(score).sort(function (a, b) {
+      if (a === "bull") {
+        return 1;
+      } else if (b === "bull") {
+        return -1;
+      } else {
+        var numberA = Number(a);
+        var numberB = Number(b);
+        return numberB - numberA;
+      }
+    }).map(function (number) {
+      console.log("number", score);
       var scoreForNumber = score[number];
       return __jsx(ScoreRow, {
         key: number,
@@ -339,8 +351,8 @@ function Game(props) {
         __self: _this,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 62,
-          columnNumber: 19
+          lineNumber: 76,
+          columnNumber: 21
         }
       });
     }));
@@ -25149,7 +25161,7 @@ function GamePage(props) {
 
 /***/ }),
 
-/***/ 2:
+/***/ 3:
 /*!*************************************************************************************************************************************************!*\
   !*** multi next-client-pages-loader?page=%2Fgame%2F%5Bid%5D&absolutePagePath=%2FUsers%2Fsean%2FWorkspace%2Fdarts%2Fpages%2Fgame%2F%5Bid%5D.tsx ***!
   \*************************************************************************************************************************************************/
@@ -25172,5 +25184,5 @@ module.exports = dll_2adc2403d89adc16ead0;
 
 /***/ })
 
-},[[2,"static/runtime/webpack.js"]]]);
+},[[3,"static/runtime/webpack.js"]]]);
 //# sourceMappingURL=[id].js.map

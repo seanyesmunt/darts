@@ -15,6 +15,7 @@ function ScoreRow(props) {
   return (
     <div className="score__item flex items-stretch relative">
       <button
+        disabled={!isMine}
         onClick={() => handleUpdateScore(score + 1)}
         className={classnames("flex-1 text-white ont-bold w-100", {
           "bg-teal-600 hover:bg-teal-500": isMine
@@ -34,7 +35,7 @@ export default function Game(props) {
     <div className="chalkboard mt-10 bg-teal-700 mx-2 chalk text-white border-b-8 shadow-xl">
       <div className="flex">
         <div className="score__column flex flex-col justify-center align-center">
-          {["", 15, 16, 17, 18, 19, 20, "bull"].map(value => {
+          {["", 20, 19, 18, 17, 16, 15, "bull"].map(value => {
             return (
               <div className="score__item px-2 flex items-center justify-center">
                 <span>{value}</span>
@@ -56,18 +57,31 @@ export default function Game(props) {
               >
                 {name}
               </div>
-              {Object.keys(score).map(number => {
-                const scoreForNumber = score[number];
-                return (
-                  <ScoreRow
-                    key={number}
-                    number={number}
-                    score={scoreForNumber}
-                    playerID={id}
-                    gameID={gameID}
-                  />
-                );
-              })}
+              {Object.keys(score)
+                .sort((a, b) => {
+                  if (a === "bull") {
+                    return 1;
+                  } else if (b === "bull") {
+                    return -1;
+                  } else {
+                    const numberA = Number(a);
+                    const numberB = Number(b);
+                    return numberB - numberA;
+                  }
+                })
+                .map(number => {
+                  console.log("number", score);
+                  const scoreForNumber = score[number];
+                  return (
+                    <ScoreRow
+                      key={number}
+                      number={number}
+                      score={scoreForNumber}
+                      playerID={id}
+                      gameID={gameID}
+                    />
+                  );
+                })}
             </div>
           );
         })}

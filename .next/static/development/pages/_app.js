@@ -47,12 +47,12 @@ if (!firebase_app__WEBPACK_IMPORTED_MODULE_2__["apps"].length) {
 
 var db = firebase_app__WEBPACK_IMPORTED_MODULE_2__["database"]();
 var DEFAULT_SCORE = {
-  15: 0,
-  16: 0,
-  17: 0,
-  18: 0,
-  19: 0,
   20: 0,
+  19: 0,
+  18: 0,
+  17: 0,
+  16: 0,
+  15: 0,
   bull: 0
 };
 function getUser(userID) {
