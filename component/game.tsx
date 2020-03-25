@@ -1,15 +1,92 @@
 import React from "react";
 import classnames from "classnames";
 import { useGetUserID } from "../effects/user";
-import { updateScore, resetScore } from "../api/firebase";
+import { updateScore, resetScore, newGame } from "../api/firebase";
+
+// 2 person, closed + highest score
+// 3 person, closed + lowest score
 
 export default function Game(props) {
-  const { join_id, players, id: gameID } = props;
+  const { join_id, players, id: gameID, creator_id } = props;
   const userID = useGetUserID();
+  const highestScore = players.reduce((acc, player) => {
+    if (player.score.total > acc) {
+      return player.score.total;
+    } else {
+      return acc;
+    }
+  }, 0);
+
+  const lowestScore = players.reduce((acc, player) => {
+    if (player.score.total < acc) {
+      return player.score.total;
+    } else {
+      return acc;
+    }
+  }, Infinity);
+
+  const creator = players.find(player => player.id === creator_id);
+
+  let hasWinner = false;
+  let winnerName;
+  for (var i = 0; i < players.length; i++) {
+    const player = players[i];
+    const scores = player.score;
+    const total =
+      scores[15] +
+      scores[16] +
+      scores[17] +
+      scores[18] +
+      scores[19] +
+      scores[20] +
+      scores["bull"];
+
+    if (total === 21) {
+      if (players.length > 2) {
+        // Does player have the lowest score?
+        const isLowest = players.some(player => {
+          return player.score.total === lowestScore;
+        });
+
+        if (isLowest) {
+          hasWinner = true;
+          winnerName = player.name;
+        }
+      } else {
+        // Does player have the highest score?
+        const isHighest = players.some(player => {
+          return player.score.total === highestScore;
+        });
+
+        if (isHighest) {
+          hasWinner = true;
+          winnerName = player.name;
+        }
+      }
+    }
+  }
 
   return (
     <div>
-      <ScoreBoard players={players} gameID={gameID} />
+      {hasWinner ? (
+        <div>
+          <h1>Winner winner for {winnerName}!</h1>
+          {creator && creator.id === userID ? (
+            <button
+              className="bg-orange-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-8"
+              onClick={() => newGame(gameID)}
+            >
+              New Game
+            </button>
+          ) : (
+            <div className="text-sm mt-4">
+              Waiting for the host to start a new game...
+            </div>
+          )}
+        </div>
+      ) : (
+        <ScoreBoard players={players} gameID={gameID} />
+      )}
     </div>
   );
 }

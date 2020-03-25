@@ -229,6 +229,27 @@ export function resetScore(gameID, userID) {
   });
 }
 
+export function newGame(gameID) {
+  return new Promise((resolve, reject) => {
+    db.ref("games/" + gameID)
+      .once("value")
+      .then(snapshot => {
+        const game = snapshot.val();
+
+        const newGame = { ...game };
+        newGame.players = newGame.players.map(player => {
+          return { ...player, score: DEFAULT_SCORE };
+        });
+
+        db.ref("games/" + gameID).set(newGame, error => {
+          if (error) {
+            console.error("error", error);
+          }
+        });
+      });
+  });
+}
+
 function handleTwoPlayerGame(
   userID: string,
   originalPlayers: Array<Player>,

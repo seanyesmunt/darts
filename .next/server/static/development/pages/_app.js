@@ -97,7 +97,7 @@ module.exports =
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame, updateScore, resetScore */
+/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame, updateScore, resetScore, newGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -109,6 +109,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateScore", function() { return updateScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetScore", function() { return resetScore; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "newGame", function() { return newGame; });
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "uuid");
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(uuid__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! firebase/app */ "firebase/app");
@@ -279,6 +280,26 @@ function resetScore(gameID, userID) {
           return player;
         }
 
+        return _objectSpread({}, player, {
+          score: DEFAULT_SCORE
+        });
+      });
+      db.ref("games/" + gameID).set(newGame, error => {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
+}
+function newGame(gameID) {
+  return new Promise((resolve, reject) => {
+    db.ref("games/" + gameID).once("value").then(snapshot => {
+      const game = snapshot.val();
+
+      const newGame = _objectSpread({}, game);
+
+      newGame.players = newGame.players.map(player => {
         return _objectSpread({}, player, {
           score: DEFAULT_SCORE
         });

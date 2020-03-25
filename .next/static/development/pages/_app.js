@@ -4,7 +4,7 @@
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame, updateScore, resetScore */
+/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame, updateScore, resetScore, newGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -16,6 +16,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateScore", function() { return updateScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetScore", function() { return resetScore; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "newGame", function() { return newGame; });
 /* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! firebase/app */ "./node_modules/firebase/app/dist/index.cjs.js");
@@ -142,7 +143,7 @@ function addPlayerToGame(gameID, userID, name) {
       if (!game.players.some(function (player) {
         return player.id === userID;
       })) {
-        var newGame = _objectSpread({}, game, {
+        var _newGame = _objectSpread({}, game, {
           players: game.players.concat({
             id: userID,
             name: name,
@@ -150,7 +151,7 @@ function addPlayerToGame(gameID, userID, name) {
           })
         });
 
-        db.ref("games/" + gameID).update(newGame, function (error) {
+        db.ref("games/" + gameID).update(_newGame, function (error) {
           if (error) {
             console.error("error", error);
           }
@@ -187,6 +188,26 @@ function resetScore(gameID, userID) {
           return player;
         }
 
+        return _objectSpread({}, player, {
+          score: DEFAULT_SCORE
+        });
+      });
+      db.ref("games/" + gameID).set(newGame, function (error) {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
+}
+function newGame(gameID) {
+  return new Promise(function (resolve, reject) {
+    db.ref("games/" + gameID).once("value").then(function (snapshot) {
+      var game = snapshot.val();
+
+      var newGame = _objectSpread({}, game);
+
+      newGame.players = newGame.players.map(function (player) {
         return _objectSpread({}, player, {
           score: DEFAULT_SCORE
         });

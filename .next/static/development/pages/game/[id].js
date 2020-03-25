@@ -4,7 +4,7 @@
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame, updateScore, resetScore */
+/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame, updateScore, resetScore, newGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -16,6 +16,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateScore", function() { return updateScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetScore", function() { return resetScore; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "newGame", function() { return newGame; });
 /* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! firebase/app */ "./node_modules/firebase/app/dist/index.cjs.js");
@@ -142,7 +143,7 @@ function addPlayerToGame(gameID, userID, name) {
       if (!game.players.some(function (player) {
         return player.id === userID;
       })) {
-        var newGame = _objectSpread({}, game, {
+        var _newGame = _objectSpread({}, game, {
           players: game.players.concat({
             id: userID,
             name: name,
@@ -150,7 +151,7 @@ function addPlayerToGame(gameID, userID, name) {
           })
         });
 
-        db.ref("games/" + gameID).update(newGame, function (error) {
+        db.ref("games/" + gameID).update(_newGame, function (error) {
           if (error) {
             console.error("error", error);
           }
@@ -187,6 +188,26 @@ function resetScore(gameID, userID) {
           return player;
         }
 
+        return _objectSpread({}, player, {
+          score: DEFAULT_SCORE
+        });
+      });
+      db.ref("games/" + gameID).set(newGame, function (error) {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
+}
+function newGame(gameID) {
+  return new Promise(function (resolve, reject) {
+    db.ref("games/" + gameID).once("value").then(function (snapshot) {
+      var game = snapshot.val();
+
+      var newGame = _objectSpread({}, game);
+
+      newGame.players = newGame.players.map(function (player) {
         return _objectSpread({}, player, {
           score: DEFAULT_SCORE
         });
@@ -294,27 +315,113 @@ var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
 
 
 
+ // 2 person, closed + highest score
+// 3 person, closed + lowest score
 
 function Game(props) {
   var join_id = props.join_id,
       players = props.players,
-      gameID = props.id;
+      gameID = props.id,
+      creator_id = props.creator_id;
   var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
+  var highestScore = players.reduce(function (acc, player) {
+    if (player.score.total > acc) {
+      return player.score.total;
+    } else {
+      return acc;
+    }
+  }, 0);
+  var lowestScore = players.reduce(function (acc, player) {
+    if (player.score.total < acc) {
+      return player.score.total;
+    } else {
+      return acc;
+    }
+  }, Infinity);
+  var creator = players.find(function (player) {
+    return player.id === creator_id;
+  });
+  var hasWinner = false;
+  var winnerName;
+
+  for (var i = 0; i < players.length; i++) {
+    var player = players[i];
+    var scores = player.score;
+    var total = scores[15] + scores[16] + scores[17] + scores[18] + scores[19] + scores[20] + scores["bull"];
+
+    if (total === 21) {
+      if (players.length > 2) {
+        // Does player have the lowest score?
+        var isLowest = players.some(function (player) {
+          return player.score.total === lowestScore;
+        });
+
+        if (isLowest) {
+          hasWinner = true;
+          winnerName = player.name;
+        }
+      } else {
+        // Does player have the highest score?
+        var isHighest = players.some(function (player) {
+          return player.score.total === highestScore;
+        });
+
+        if (isHighest) {
+          hasWinner = true;
+          winnerName = player.name;
+        }
+      }
+    }
+  }
+
   return __jsx("div", {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 11,
+      lineNumber: 70,
       columnNumber: 5
     }
-  }, __jsx(ScoreBoard, {
+  }, hasWinner ? __jsx("div", {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 72,
+      columnNumber: 9
+    }
+  }, __jsx("h1", {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 73,
+      columnNumber: 11
+    }
+  }, "Winner winner for ", winnerName, "!"), creator && creator.id === userID ? __jsx("button", {
+    className: "bg-orange-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-8",
+    onClick: function onClick() {
+      return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["newGame"])(gameID);
+    },
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 75,
+      columnNumber: 13
+    }
+  }, "New Game") : __jsx("div", {
+    className: "text-sm mt-4",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 82,
+      columnNumber: 13
+    }
+  }, "Waiting for the host to start a new game...")) : __jsx(ScoreBoard, {
     players: players,
     gameID: gameID,
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 12,
-      columnNumber: 7
+      lineNumber: 88,
+      columnNumber: 9
     }
   }));
 }
@@ -329,7 +436,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 22,
+      lineNumber: 99,
       columnNumber: 5
     }
   }, __jsx("div", {
@@ -337,7 +444,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 23,
+      lineNumber: 100,
       columnNumber: 7
     }
   }, __jsx("div", {
@@ -345,7 +452,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 24,
+      lineNumber: 101,
       columnNumber: 9
     }
   }, __jsx("div", {
@@ -353,7 +460,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 25,
+      lineNumber: 102,
       columnNumber: 11
     }
   }, ["", 20, 19, 18, 17, 16, 15, "bull"].map(function (value) {
@@ -363,14 +470,14 @@ function ScoreBoard(props) {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 28,
+        lineNumber: 105,
         columnNumber: 17
       }
     }, __jsx("span", {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 32,
+        lineNumber: 109,
         columnNumber: 19
       }
     }, value));
@@ -385,7 +492,7 @@ function ScoreBoard(props) {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 40,
+        lineNumber: 117,
         columnNumber: 15
       }
     }, __jsx("div", {
@@ -395,21 +502,21 @@ function ScoreBoard(props) {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 41,
+        lineNumber: 118,
         columnNumber: 17
       }
     }, __jsx("div", {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 49,
+        lineNumber: 126,
         columnNumber: 19
       }
     }, name), __jsx("div", {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 50,
+        lineNumber: 127,
         columnNumber: 19
       }
     }, score.total)), [20, 19, 18, 17, 16, 15, "bull"].map(function (number) {
@@ -422,7 +529,7 @@ function ScoreBoard(props) {
         __self: _this,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 54,
+          lineNumber: 131,
           columnNumber: 21
         }
       });
@@ -435,7 +542,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 68,
+      lineNumber: 145,
       columnNumber: 7
     }
   }, "Reset Score"));
@@ -458,7 +565,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 88,
+      lineNumber: 165,
       columnNumber: 5
     }
   }, __jsx("button", {
@@ -472,7 +579,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 89,
+      lineNumber: 166,
       columnNumber: 7
     }
   }, score === 0 ? "" : score));
