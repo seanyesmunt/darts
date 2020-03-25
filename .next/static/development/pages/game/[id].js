@@ -235,7 +235,7 @@ function handleThreePlayerGame(userID, originalPlayers, number) {
     newPlayers = newPlayers.map(function (player) {
       var newPlayer = _objectSpread({}, player);
 
-      if (newPlayer.id !== userID) {
+      if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
         newPlayer.score.total += typeof number === "string" ? 50 : number;
       }
 

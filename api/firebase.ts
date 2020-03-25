@@ -271,7 +271,7 @@ function handleThreePlayerGame(
   if (amAddingToOtherPlayers) {
     newPlayers = newPlayers.map(player => {
       const newPlayer = { ...player };
-      if (newPlayer.id !== userID) {
+      if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
         newPlayer.score.total += typeof number === "string" ? 50 : number;
       }
       return { ...newPlayer };
