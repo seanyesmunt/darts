@@ -234,7 +234,7 @@ function handleTwoPlayerGame(userID, originalPlayers, number) {
 
     if (scoreForNumber === 3) {
       // Update other scores
-      newPlayer.score.total += typeof number === "string" ? 50 : number;
+      newPlayer.score.total += typeof number === "string" ? 25 : number;
     } else {
       newPlayer.score[number] = scoreForNumber + 1;
     }
@@ -257,7 +257,7 @@ function handleThreePlayerGame(userID, originalPlayers, number) {
       var newPlayer = _objectSpread({}, player);
 
       if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-        newPlayer.score.total += typeof number === "string" ? 50 : number;
+        newPlayer.score.total += typeof number === "string" ? 25 : number;
       }
 
       return _objectSpread({}, newPlayer);
@@ -24271,7 +24271,7 @@ function App(_ref) {
       columnNumber: 7
     }
   }, __jsx("link", {
-    href: "https://fonts.googleapis.com/css?family=Noto+Serif:700|Roboto&display=swap",
+    href: "https://fonts.googleapis.com/css?family=Noto+Serif:400,700|Roboto&display=swap",
     rel: "stylesheet",
     __self: this,
     __source: {

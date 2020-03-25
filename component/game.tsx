@@ -27,8 +27,6 @@ export default function Game(props) {
 
   const creator = players.find(player => player.id === creator_id);
 
-  console.log("lowest", lowestScore);
-
   let hasWinner = false;
   let winnerName;
   for (var i = 0; i < players.length; i++) {
@@ -168,12 +166,50 @@ function ScoreRow(props) {
       <button
         disabled={!isMine}
         onClick={() => handleUpdateScore()}
-        className={classnames("flex-1 text-white ont-bold w-100", {
-          "bg-teal-600 hover:bg-teal-500": isMine
-        })}
+        className={classnames(
+          "flex-1 flex align-center justify-center text-white ont-bold w-100",
+          {
+            "bg-teal-600 hover:bg-teal-500": isMine
+          }
+        )}
       >
-        {score === 0 ? "" : score}
+        {score === 1 && (
+          <SVG>
+            <line x1="15" y1="9" x2="9" y2="15" />
+          </SVG>
+        )}
+        {score === 2 && (
+          <SVG>
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </SVG>
+        )}
+        {score === 3 && (
+          <SVG>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </SVG>
+        )}
       </button>
     </div>
+  );
+}
+
+function SVG(props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={48}
+      height={48}
+      fill="none"
+      stroke="white"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {props.children}
+    </svg>
   );
 }

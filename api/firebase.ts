@@ -266,7 +266,7 @@ function handleTwoPlayerGame(
     const scoreForNumber = newPlayer.score[number];
     if (scoreForNumber === 3) {
       // Update other scores
-      newPlayer.score.total += typeof number === "string" ? 50 : number;
+      newPlayer.score.total += typeof number === "string" ? 25 : number;
     } else {
       newPlayer.score[number] = scoreForNumber + 1;
     }
@@ -293,7 +293,7 @@ function handleThreePlayerGame(
     newPlayers = newPlayers.map(player => {
       const newPlayer = { ...player };
       if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-        newPlayer.score.total += typeof number === "string" ? 50 : number;
+        newPlayer.score.total += typeof number === "string" ? 25 : number;
       }
       return { ...newPlayer };
     });
