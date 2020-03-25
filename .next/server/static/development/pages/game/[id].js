@@ -147,7 +147,8 @@ const DEFAULT_SCORE = {
   17: 0,
   16: 0,
   15: 0,
-  bull: 0
+  bull: 0,
+  total: 0
 };
 function getUser(userID) {
   return db.ref("/users/" + userID).once("value").then(function (snapshot) {
@@ -249,23 +250,14 @@ function addPlayerToGame(gameID, userID, name) {
     });
   });
 }
-function updateScore(gameID, userID, number, newScore) {
+function updateScore(gameID, userID, number) {
   return new Promise((resolve, reject) => {
     db.ref("games/" + gameID).once("value").then(snapshot => {
       const game = snapshot.val();
 
       const newGame = _objectSpread({}, game);
 
-      newGame.players = newGame.players.map(player => {
-        if (player.id !== userID) {
-          return player;
-        }
-
-        const newPlayer = _objectSpread({}, player);
-
-        newPlayer.score[number] = newScore;
-        return _objectSpread({}, newPlayer);
-      });
+      newGame.players = newGame.players.length > 2 ? handleThreePlayerGame(userID, newGame.players, number) : handleTwoPlayerGame(userID, newGame.players, number);
       db.ref("games/" + gameID).set(newGame, error => {
         if (error) {
           console.error("error", error);
@@ -273,6 +265,64 @@ function updateScore(gameID, userID, number, newScore) {
       });
     });
   });
+}
+
+function handleTwoPlayerGame(userID, originalPlayers, number) {
+  let newPlayers = originalPlayers.slice();
+  newPlayers = newPlayers.map(player => {
+    if (player.id !== userID) {
+      return player;
+    }
+
+    const newPlayer = _objectSpread({}, player);
+
+    const scoreForNumber = newPlayer.score[number];
+
+    if (scoreForNumber === 3) {
+      // Update other scores
+      newPlayer.score.total += typeof number === "string" ? 50 : number;
+    } else {
+      newPlayer.score[number] = scoreForNumber + 1;
+    }
+
+    return _objectSpread({}, newPlayer);
+  });
+  return newPlayers;
+}
+
+function handleThreePlayerGame(userID, originalPlayers, number) {
+  let newPlayers = originalPlayers.slice();
+  const amAddingToOtherPlayers = newPlayers.some(player => {
+    if (player.id === userID && player.score[number] === 3) {
+      return true;
+    }
+  });
+
+  if (amAddingToOtherPlayers) {
+    newPlayers = newPlayers.map(player => {
+      const newPlayer = _objectSpread({}, player);
+
+      if (newPlayer.id !== userID) {
+        newPlayer.score.total += typeof number === "string" ? 50 : number;
+      }
+
+      return _objectSpread({}, newPlayer);
+    });
+  } else {
+    newPlayers = newPlayers.map(player => {
+      if (player.id !== userID) {
+        return player;
+      }
+
+      const newPlayer = _objectSpread({}, player);
+
+      const scoreForNumber = newPlayer.score[number];
+      newPlayer.score[number] = scoreForNumber + 1;
+      return _objectSpread({}, newPlayer);
+    });
+  }
+
+  return newPlayers;
 } // const data = {
 //   games: {
 //     "one": {
@@ -312,6 +362,136 @@ var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
 
 
 
+function Game(props) {
+  const {
+    join_id,
+    players,
+    id: gameID
+  } = props;
+  const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
+  return __jsx("div", {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 11,
+      columnNumber: 5
+    }
+  }, __jsx(ScoreBoard, {
+    players: players,
+    gameID: gameID,
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 12,
+      columnNumber: 7
+    }
+  }));
+}
+
+function ScoreBoard(props) {
+  const {
+    players,
+    gameID
+  } = props;
+  const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
+  return __jsx("div", {
+    className: "chalkboard mt-10 bg-teal-700 mx-2 chalk text-white border-b-8 shadow-xl",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 22,
+      columnNumber: 5
+    }
+  }, __jsx("div", {
+    className: "flex",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 23,
+      columnNumber: 7
+    }
+  }, __jsx("div", {
+    className: "score__column flex flex-col justify-center align-center",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 24,
+      columnNumber: 9
+    }
+  }, ["", 20, 19, 18, 17, 16, 15, "bull"].map(value => {
+    return __jsx("div", {
+      key: value,
+      className: "score__item px-2 flex items-center justify-center",
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 27,
+        columnNumber: 15
+      }
+    }, __jsx("span", {
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 31,
+        columnNumber: 17
+      }
+    }, value));
+  })), players.map(({
+    id,
+    name,
+    score
+  }) => {
+    const isMine = id === userID;
+    return __jsx("div", {
+      key: id,
+      className: "score__column",
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 39,
+        columnNumber: 13
+      }
+    }, __jsx("div", {
+      className: classnames__WEBPACK_IMPORTED_MODULE_1___default()("score__item text-center border-gray-400 p-5", {
+        "bg-teal-600": isMine
+      }),
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 40,
+        columnNumber: 15
+      }
+    }, __jsx("div", {
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 48,
+        columnNumber: 17
+      }
+    }, name), __jsx("div", {
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 49,
+        columnNumber: 17
+      }
+    }, score.total)), [20, 19, 18, 17, 16, 15, "bull"].map(number => {
+      return __jsx(ScoreRow, {
+        key: number,
+        number: number,
+        score: score[number],
+        playerID: id,
+        gameID: gameID,
+        __self: this,
+        __source: {
+          fileName: _jsxFileName,
+          lineNumber: 53,
+          columnNumber: 19
+        }
+      });
+    }));
+  })));
+}
 
 function ScoreRow(props) {
   const {
@@ -323,8 +503,8 @@ function ScoreRow(props) {
   const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
   const isMine = playerID === userID;
 
-  function handleUpdateScore(newScore) {
-    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["updateScore"])(gameID, userID, number, newScore % 4);
+  function handleUpdateScore() {
+    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["updateScore"])(gameID, userID, number);
   }
 
   return __jsx("div", {
@@ -332,124 +512,22 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 16,
+      lineNumber: 80,
       columnNumber: 5
     }
   }, __jsx("button", {
     disabled: !isMine,
-    onClick: () => handleUpdateScore(score + 1),
+    onClick: () => handleUpdateScore(),
     className: classnames__WEBPACK_IMPORTED_MODULE_1___default()("flex-1 text-white ont-bold w-100", {
       "bg-teal-600 hover:bg-teal-500": isMine
     }),
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 17,
+      lineNumber: 81,
       columnNumber: 7
     }
   }, score === 0 ? "" : score));
-}
-
-function Game(props) {
-  const {
-    join_id,
-    players,
-    id: gameID
-  } = props;
-  const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
-  return __jsx("div", {
-    className: "chalkboard mt-10 bg-teal-700 mx-2 chalk text-white border-b-8 shadow-xl",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 35,
-      columnNumber: 5
-    }
-  }, __jsx("div", {
-    className: "flex",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 36,
-      columnNumber: 7
-    }
-  }, __jsx("div", {
-    className: "score__column flex flex-col justify-center align-center",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 37,
-      columnNumber: 9
-    }
-  }, ["", 20, 19, 18, 17, 16, 15, "bull"].map(value => {
-    return __jsx("div", {
-      className: "score__item px-2 flex items-center justify-center",
-      __self: this,
-      __source: {
-        fileName: _jsxFileName,
-        lineNumber: 40,
-        columnNumber: 15
-      }
-    }, __jsx("span", {
-      __self: this,
-      __source: {
-        fileName: _jsxFileName,
-        lineNumber: 41,
-        columnNumber: 17
-      }
-    }, value));
-  })), players.map(({
-    id,
-    name,
-    score
-  }) => {
-    const isMine = id === userID;
-    return __jsx("div", {
-      className: "score__column",
-      __self: this,
-      __source: {
-        fileName: _jsxFileName,
-        lineNumber: 49,
-        columnNumber: 13
-      }
-    }, __jsx("div", {
-      className: classnames__WEBPACK_IMPORTED_MODULE_1___default()("score__item text-center border-gray-400 p-5", {
-        "bg-teal-600": isMine
-      }),
-      __self: this,
-      __source: {
-        fileName: _jsxFileName,
-        lineNumber: 50,
-        columnNumber: 15
-      }
-    }, name), Object.keys(score).sort((a, b) => {
-      if (a === "bull") {
-        return 1;
-      } else if (b === "bull") {
-        return -1;
-      } else {
-        const numberA = Number(a);
-        const numberB = Number(b);
-        return numberB - numberA;
-      }
-    }).map(number => {
-      console.log("number", score);
-      const scoreForNumber = score[number];
-      return __jsx(ScoreRow, {
-        key: number,
-        number: number,
-        score: scoreForNumber,
-        playerID: id,
-        gameID: gameID,
-        __self: this,
-        __source: {
-          fileName: _jsxFileName,
-          lineNumber: 76,
-          columnNumber: 21
-        }
-      });
-    }));
-  })));
 }
 
 /***/ }),

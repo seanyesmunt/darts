@@ -24,6 +24,7 @@ declare global {
       19: number;
       20: number;
       bull: number;
+      total: number; // This shouldn't exist, it should just be calculated from the other values, but that's more work
     };
   }
 
@@ -63,7 +64,8 @@ const DEFAULT_SCORE = {
   17: 0,
   16: 0,
   15: 0,
-  bull: 0
+  bull: 0,
+  total: 0
 };
 
 export function getUser(userID: string): Promise<User> {
@@ -180,7 +182,7 @@ export function addPlayerToGame(gameID, userID, name) {
   });
 }
 
-export function updateScore(gameID, userID, number, newScore) {
+export function updateScore(gameID, userID, number) {
   return new Promise((resolve, reject) => {
     db.ref("games/" + gameID)
       .once("value")
@@ -188,16 +190,10 @@ export function updateScore(gameID, userID, number, newScore) {
         const game = snapshot.val();
 
         const newGame = { ...game };
-        newGame.players = newGame.players.map(player => {
-          if (player.id !== userID) {
-            return player;
-          }
-
-          const newPlayer = { ...player };
-          newPlayer.score[number] = newScore;
-
-          return { ...newPlayer };
-        });
+        newGame.players =
+          newGame.players.length > 2
+            ? handleThreePlayerGame(userID, newGame.players, number)
+            : handleTwoPlayerGame(userID, newGame.players, number);
 
         db.ref("games/" + gameID).set(newGame, error => {
           if (error) {
@@ -206,6 +202,70 @@ export function updateScore(gameID, userID, number, newScore) {
         });
       });
   });
+}
+
+function handleTwoPlayerGame(
+  userID: string,
+  originalPlayers: Array<Player>,
+  number: string | number
+) {
+  let newPlayers = originalPlayers.slice();
+
+  newPlayers = newPlayers.map(player => {
+    if (player.id !== userID) {
+      return player;
+    }
+
+    const newPlayer = { ...player };
+    const scoreForNumber = newPlayer.score[number];
+    if (scoreForNumber === 3) {
+      // Update other scores
+      newPlayer.score.total += typeof number === "string" ? 50 : number;
+    } else {
+      newPlayer.score[number] = scoreForNumber + 1;
+    }
+
+    return { ...newPlayer };
+  });
+
+  return newPlayers;
+}
+
+function handleThreePlayerGame(
+  userID: string,
+  originalPlayers: Array<Player>,
+  number: string | number
+) {
+  let newPlayers = originalPlayers.slice();
+  const amAddingToOtherPlayers = newPlayers.some(player => {
+    if (player.id === userID && player.score[number] === 3) {
+      return true;
+    }
+  });
+
+  if (amAddingToOtherPlayers) {
+    newPlayers = newPlayers.map(player => {
+      const newPlayer = { ...player };
+      if (newPlayer.id !== userID) {
+        newPlayer.score.total += typeof number === "string" ? 50 : number;
+      }
+      return { ...newPlayer };
+    });
+  } else {
+    newPlayers = newPlayers.map(player => {
+      if (player.id !== userID) {
+        return player;
+      }
+
+      const newPlayer = { ...player };
+      const scoreForNumber = newPlayer.score[number];
+      newPlayer.score[number] = scoreForNumber + 1;
+
+      return { ...newPlayer };
+    });
+  }
+
+  return newPlayers;
 }
 
 // const data = {

@@ -53,7 +53,8 @@ var DEFAULT_SCORE = {
   17: 0,
   16: 0,
   15: 0,
-  bull: 0
+  bull: 0,
+  total: 0
 };
 function getUser(userID) {
   return db.ref("/users/" + userID).once("value").then(function (snapshot) {
@@ -157,23 +158,14 @@ function addPlayerToGame(gameID, userID, name) {
     });
   });
 }
-function updateScore(gameID, userID, number, newScore) {
+function updateScore(gameID, userID, number) {
   return new Promise(function (resolve, reject) {
     db.ref("games/" + gameID).once("value").then(function (snapshot) {
       var game = snapshot.val();
 
       var newGame = _objectSpread({}, game);
 
-      newGame.players = newGame.players.map(function (player) {
-        if (player.id !== userID) {
-          return player;
-        }
-
-        var newPlayer = _objectSpread({}, player);
-
-        newPlayer.score[number] = newScore;
-        return _objectSpread({}, newPlayer);
-      });
+      newGame.players = newGame.players.length > 2 ? handleThreePlayerGame(userID, newGame.players, number) : handleTwoPlayerGame(userID, newGame.players, number);
       db.ref("games/" + gameID).set(newGame, function (error) {
         if (error) {
           console.error("error", error);
@@ -181,6 +173,64 @@ function updateScore(gameID, userID, number, newScore) {
       });
     });
   });
+}
+
+function handleTwoPlayerGame(userID, originalPlayers, number) {
+  var newPlayers = originalPlayers.slice();
+  newPlayers = newPlayers.map(function (player) {
+    if (player.id !== userID) {
+      return player;
+    }
+
+    var newPlayer = _objectSpread({}, player);
+
+    var scoreForNumber = newPlayer.score[number];
+
+    if (scoreForNumber === 3) {
+      // Update other scores
+      newPlayer.score.total += typeof number === "string" ? 50 : number;
+    } else {
+      newPlayer.score[number] = scoreForNumber + 1;
+    }
+
+    return _objectSpread({}, newPlayer);
+  });
+  return newPlayers;
+}
+
+function handleThreePlayerGame(userID, originalPlayers, number) {
+  var newPlayers = originalPlayers.slice();
+  var amAddingToOtherPlayers = newPlayers.some(function (player) {
+    if (player.id === userID && player.score[number] === 3) {
+      return true;
+    }
+  });
+
+  if (amAddingToOtherPlayers) {
+    newPlayers = newPlayers.map(function (player) {
+      var newPlayer = _objectSpread({}, player);
+
+      if (newPlayer.id !== userID) {
+        newPlayer.score.total += typeof number === "string" ? 50 : number;
+      }
+
+      return _objectSpread({}, newPlayer);
+    });
+  } else {
+    newPlayers = newPlayers.map(function (player) {
+      if (player.id !== userID) {
+        return player;
+      }
+
+      var newPlayer = _objectSpread({}, player);
+
+      var scoreForNumber = newPlayer.score[number];
+      newPlayer.score[number] = scoreForNumber + 1;
+      return _objectSpread({}, newPlayer);
+    });
+  }
+
+  return newPlayers;
 } // const data = {
 //   games: {
 //     "one": {
