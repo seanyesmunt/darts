@@ -27,6 +27,8 @@ export default function Game(props) {
 
   const creator = players.find(player => player.id === creator_id);
 
+  console.log("lowest", lowestScore);
+
   let hasWinner = false;
   let winnerName;
   for (var i = 0; i < players.length; i++) {
