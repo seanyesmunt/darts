@@ -3,13 +3,59 @@ import classnames from "classnames";
 import { useGetUserID } from "../effects/user";
 import { updateScore, resetScore } from "../api/firebase";
 
+// 2 person, closed + highest score
+// 3 person, closed + lowest score
+
 export default function Game(props) {
   const { join_id, players, id: gameID } = props;
   const userID = useGetUserID();
+  const highestScore = players.reduce(
+    (acc, player) => {
+      if (player.score.total > acc) {
+        return player.score.total;
+      } else {
+        return acc;
+      }
+    },
+    [0]
+  );
+
+  let hasWinner = false;
+  for (var i = 0; i < players.length; i++) {
+    const player = players[i];
+    const scores = player.score;
+    const total =
+      scores[15] +
+      scores[16] +
+      scores[17] +
+      scores[18] +
+      scores[19] +
+      scores[20] +
+      scores["bull"];
+
+    if (total === 21) {
+      // Check scores, 2 v 3 players
+      if (players.length > 2) {
+      } else {
+        // Does player have the highest score?
+        const isHighest = players.some(player => {
+          return player.score.total === highestScore;
+        });
+
+        if (isHighest) {
+          hasWinner = true;
+        }
+      }
+    }
+  }
 
   return (
     <div>
-      <ScoreBoard players={players} gameID={gameID} />
+      {hasWinner ? (
+        <div>Winner winner!</div>
+      ) : (
+        <ScoreBoard players={players} gameID={gameID} />
+      )}
     </div>
   );
 }
