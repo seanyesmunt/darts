@@ -313,19 +313,3 @@ function handleThreePlayerGame(
 
   return newPlayers;
 }
-
-// const data = {
-//   games: {
-//     "one": {
-//       creator: "user_id",
-//       timestamp: 000,
-//       code: "7yzh"
-//     },
-//     "two": {
-//       creator: "user_id",
-//       timestamp: 000,
-//       code: "8n0a"
-//     }
-//   }
-
-// }

@@ -66,28 +66,28 @@ export default function Game(props) {
     }
   }
 
-  return (
-    <div>
-      {hasWinner ? (
-        <div>
-          <h1>Winner winner for {winnerName}!</h1>
-          {creator && creator.id === userID ? (
-            <button
-              className="bg-orange-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-8"
-              onClick={() => newGame(gameID)}
-            >
-              New Game
-            </button>
-          ) : (
-            <div className="text-sm mt-4">
-              Waiting for the host to start a new game...
-            </div>
-          )}
-        </div>
-      ) : (
-        <ScoreBoard players={players} gameID={gameID} />
-      )}
+  return hasWinner ? (
+    <div className="px-4 mx-auto">
+      <img src="/winner.png" className="w-full max-w-lg mt-8" />
+      <h1 className="chalk text-6xl px-8">Nice one {winnerName}!</h1>
+
+      <div className="px-8">
+        {creator && creator.id === userID ? (
+          <button
+            className="mt-4 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow"
+            onClick={() => newGame(gameID)}
+          >
+            New Game
+          </button>
+        ) : (
+          <div className="text-sm my-16">
+            Waiting for the host to start the another game...
+          </div>
+        )}
+      </div>
     </div>
+  ) : (
+    <ScoreBoard players={players} gameID={gameID} />
   );
 }
 
@@ -97,7 +97,7 @@ function ScoreBoard(props) {
 
   return (
     <div>
-      <div className="chalkboard mt-10 bg-teal-700 mx-2 chalk text-white border-b-8 shadow-xl">
+      <div className="chalkboard mx-2 chalk text-white border-b-8 shadow-xl">
         <div className="flex">
           <div className="score__column flex flex-col justify-center align-center">
             {["", 20, 19, 18, 17, 16, 15, "bull"].map(value => {

@@ -3,7 +3,7 @@ import Header from "./header";
 
 export default function Page(props) {
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-full min-h-screen  flex flex-col bg-gray-900">
       <Header />
       {props.children}
     </div>

@@ -277,20 +277,7 @@ function handleThreePlayerGame(userID, originalPlayers, number) {
   }
 
   return newPlayers;
-} // const data = {
-//   games: {
-//     "one": {
-//       creator: "user_id",
-//       timestamp: 000,
-//       code: "7yzh"
-//     },
-//     "two": {
-//       creator: "user_id",
-//       timestamp: 000,
-//       code: "8n0a"
-//     }
-//   }
-// }
+}
 
 /***/ }),
 
@@ -329,7 +316,7 @@ function Header() {
 
   var joinID = game && game.join_id;
   return __jsx("nav", {
-    className: "chalk flex items-center justify-between flex-wrap p-6 bg-black shadow-xs text-white",
+    className: "chalk flex items-center justify-between flex-wrap p-6 bg-gray-800 shadow-xs text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -405,7 +392,7 @@ var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
 
 function Page(props) {
   return __jsx("div", {
-    className: "h-screen flex flex-col",
+    className: "h-full min-h-screen  flex flex-col bg-gray-900",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -24879,10 +24866,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _component_page__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../component/page */ "./component/page.tsx");
-/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
-/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! next/router */ "./node_modules/next/dist/client/router.js");
-/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(next_router__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var next_link__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! next/link */ "./node_modules/next/link.js");
+/* harmony import */ var next_link__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(next_link__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _component_page__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../component/page */ "./component/page.tsx");
+/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! next/router */ "./node_modules/next/dist/client/router.js");
+/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(next_router__WEBPACK_IMPORTED_MODULE_5__);
 
 var _jsxFileName = "/Users/sean/Workspace/darts/pages/index.tsx";
 var __jsx = react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement;
@@ -24890,9 +24879,10 @@ var __jsx = react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement;
 
 
 
+
 function Home(props) {
   var game = props.game;
-  var router = Object(next_router__WEBPACK_IMPORTED_MODULE_4__["useRouter"])();
+  var router = Object(next_router__WEBPACK_IMPORTED_MODULE_5__["useRouter"])();
 
   var _React$useState = react__WEBPACK_IMPORTED_MODULE_1___default.a.useState(false),
       _React$useState2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_React$useState, 2),
@@ -24916,7 +24906,7 @@ function Home(props) {
 
   function handleJoinGame(e) {
     e.preventDefault();
-    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["getGameId"])(gameIDToJoin).then(function (gameId) {
+    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_4__["getGameId"])(gameIDToJoin).then(function (gameId) {
       router.push("/game/".concat(gameId));
     })["catch"](console.error);
   }
@@ -24926,203 +24916,70 @@ function Home(props) {
     router.push("/setup?name=".concat(name));
   }
 
-  return __jsx(_component_page__WEBPACK_IMPORTED_MODULE_2__["default"], {
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 34,
-      columnNumber: 5
-    }
-  }, __jsx("main", {
-    className: "chalk flex flex-1 items-center justify-center bg-teal-700 text-white",
+  return __jsx(_component_page__WEBPACK_IMPORTED_MODULE_3__["default"], {
     __self: this,
     __source: {
       fileName: _jsxFileName,
       lineNumber: 35,
+      columnNumber: 5
+    }
+  }, __jsx("main", {
+    className: "flex flex-col flex-1 items-center justify-center text-white p-8",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 36,
       columnNumber: 7
     }
-  }, !isJoiningGame && !isCreatingGame && __jsx("div", {
-    className: "",
+  }, __jsx("h1", {
+    className: "chalk font-bold text-6xl",
     __self: this,
     __source: {
       fileName: _jsxFileName,
       lineNumber: 37,
-      columnNumber: 11
+      columnNumber: 9
     }
-  }, __jsx("h1", {
-    className: "font-bold text-6xl",
+  }, "Cricket"), __jsx("div", {
+    className: "w-full flex flex-col justify-center md:flex-row mt-5 pb-24 text-center",
     __self: this,
     __source: {
       fileName: _jsxFileName,
       lineNumber: 38,
-      columnNumber: 13
+      columnNumber: 9
     }
-  }, "darts.now.sh"), __jsx("div", {
-    className: "flex mt-5",
+  }, __jsx(next_link__WEBPACK_IMPORTED_MODULE_2___default.a, {
+    href: "/new",
     __self: this,
     __source: {
       fileName: _jsxFileName,
       lineNumber: 39,
-      columnNumber: 13
+      columnNumber: 11
     }
-  }, __jsx("button", {
-    onClick: function onClick() {
-      return setIsCreatingGame(true);
-    },
-    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
+  }, __jsx("a", {
+    className: "mr-4 w-full md:w-auto text-4xl bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow",
     __self: this,
     __source: {
       fileName: _jsxFileName,
       lineNumber: 40,
-      columnNumber: 15
-    }
-  }, "Start A Game"), __jsx("button", {
-    onClick: function onClick() {
-      return setIsJoiningGame(true);
-    },
-    className: "bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 border-b-4 border-orange-600 hover:border-orange-700 rounded",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 46,
-      columnNumber: 15
-    }
-  }, "Join Someones Game"))), isJoiningGame && __jsx("div", {
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 57,
-      columnNumber: 11
-    }
-  }, __jsx("form", {
-    onSubmit: handleJoinGame,
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 58,
       columnNumber: 13
     }
-  }, __jsx("label", {
-    className: "text-gray-100",
+  }, "New Game")), __jsx(next_link__WEBPACK_IMPORTED_MODULE_2___default.a, {
+    href: "/join",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 59,
-      columnNumber: 15
-    }
-  }, "ID to join"), __jsx("input", {
-    autoFocus: true,
-    autoComplete: "off",
-    className: "block shadow appearance-none border h-40 text-6xl rounded py-2 px-3 text-gray-800 placeholder-gray-400 leading-tight focus:outline-none focus:shadow-outline",
-    type: "text",
-    placeholder: "4b90",
-    value: gameIDToJoin,
-    onChange: function onChange(e) {
-      return setGameIDToJoin(e.target.value);
-    },
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 60,
-      columnNumber: 15
-    }
-  }), __jsx("div", {
-    className: "flex mt-5",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 70,
-      columnNumber: 15
-    }
-  }, __jsx("button", {
-    type: "submit",
-    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 71,
-      columnNumber: 17
-    }
-  }, "Join Game"), __jsx("button", {
-    onClick: function onClick() {
-      return setIsJoiningGame(false);
-    },
-    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 77,
-      columnNumber: 17
-    }
-  }, "Cancel")))), isCreatingGame && __jsx("div", {
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 89,
+      lineNumber: 44,
       columnNumber: 11
     }
-  }, __jsx("form", {
-    onSubmit: handleCreateGame,
+  }, __jsx("a", {
+    className: "text-4xl mt-4 md:mt-0 bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg shadow",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 90,
+      lineNumber: 45,
       columnNumber: 13
     }
-  }, __jsx("label", {
-    className: "text-white",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 91,
-      columnNumber: 15
-    }
-  }, "Your Name"), __jsx("input", {
-    autoComplete: "off",
-    autoFocus: true,
-    className: "block shadow appearance-none border h-40 text-6xl rounded py-2 px-3 text-gray-700 placeholder-gray-400 leading-tight focus:outline-none focus:shadow-outline",
-    id: "username",
-    type: "text",
-    placeholder: "Kenny Powers",
-    value: name,
-    onChange: function onChange(e) {
-      return setName(e.target.value);
-    },
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 92,
-      columnNumber: 15
-    }
-  }), __jsx("div", {
-    className: "flex mt-5",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 102,
-      columnNumber: 15
-    }
-  }, __jsx("button", {
-    type: "submit",
-    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 103,
-      columnNumber: 17
-    }
-  }, "Create Game"), __jsx("button", {
-    onClick: function onClick() {
-      return setIsCreatingGame(false);
-    },
-    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 109,
-      columnNumber: 17
-    }
-  }, "Cancel"))))));
+  }, "Join Someone")))));
 }
 
 /***/ }),

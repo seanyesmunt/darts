@@ -369,20 +369,7 @@ function handleThreePlayerGame(userID, originalPlayers, number) {
   }
 
   return newPlayers;
-} // const data = {
-//   games: {
-//     "one": {
-//       creator: "user_id",
-//       timestamp: 000,
-//       code: "7yzh"
-//     },
-//     "two": {
-//       creator: "user_id",
-//       timestamp: 000,
-//       code: "8n0a"
-//     }
-//   }
-// }
+}
 
 /***/ }),
 
@@ -563,7 +550,7 @@ function App({
       columnNumber: 7
     }
   }, __jsx("link", {
-    href: "https://fonts.googleapis.com/css?family=Noto+Serif:400,700|Roboto&display=swap",
+    href: "https://fonts.googleapis.com/css?family=Roboto:400,700|Mansalva&display=swap",
     rel: "stylesheet",
     __self: this,
     __source: {

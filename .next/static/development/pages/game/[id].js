@@ -277,20 +277,7 @@ function handleThreePlayerGame(userID, originalPlayers, number) {
   }
 
   return newPlayers;
-} // const data = {
-//   games: {
-//     "one": {
-//       creator: "user_id",
-//       timestamp: 000,
-//       code: "7yzh"
-//     },
-//     "two": {
-//       creator: "user_id",
-//       timestamp: 000,
-//       code: "8n0a"
-//     }
-//   }
-// }
+}
 
 /***/ }),
 
@@ -374,56 +361,68 @@ function Game(props) {
     }
   }
 
-  return __jsx("div", {
+  return hasWinner ? __jsx("div", {
+    className: "px-4 mx-auto",
     __self: this,
     __source: {
       fileName: _jsxFileName,
       lineNumber: 70,
       columnNumber: 5
     }
-  }, hasWinner ? __jsx("div", {
+  }, __jsx("img", {
+    src: "/winner.png",
+    className: "w-full max-w-lg mt-8",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 71,
+      columnNumber: 7
+    }
+  }), __jsx("h1", {
+    className: "chalk text-6xl px-8",
     __self: this,
     __source: {
       fileName: _jsxFileName,
       lineNumber: 72,
-      columnNumber: 9
+      columnNumber: 7
     }
-  }, __jsx("h1", {
+  }, "Nice one ", winnerName, "!"), __jsx("div", {
+    className: "px-8",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 73,
-      columnNumber: 11
+      lineNumber: 74,
+      columnNumber: 7
     }
-  }, "Winner winner for ", winnerName, "!"), creator && creator.id === userID ? __jsx("button", {
-    className: "bg-orange-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-8",
+  }, creator && creator.id === userID ? __jsx("button", {
+    className: "mt-4 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow",
     onClick: function onClick() {
       return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["newGame"])(gameID);
     },
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 75,
-      columnNumber: 13
+      lineNumber: 76,
+      columnNumber: 11
     }
   }, "New Game") : __jsx("div", {
-    className: "text-sm mt-4",
+    className: "text-sm my-16",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 82,
-      columnNumber: 13
+      lineNumber: 83,
+      columnNumber: 11
     }
-  }, "Waiting for the host to start a new game...")) : __jsx(ScoreBoard, {
+  }, "Waiting for the host to start the another game..."))) : __jsx(ScoreBoard, {
     players: players,
     gameID: gameID,
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 88,
-      columnNumber: 9
+      lineNumber: 90,
+      columnNumber: 5
     }
-  }));
+  });
 }
 
 function ScoreBoard(props) {
@@ -440,7 +439,7 @@ function ScoreBoard(props) {
       columnNumber: 5
     }
   }, __jsx("div", {
-    className: "chalkboard mt-10 bg-teal-700 mx-2 chalk text-white border-b-8 shadow-xl",
+    className: "chalkboard mx-2 chalk text-white border-b-8 shadow-xl",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -728,7 +727,7 @@ function Header() {
 
   var joinID = game && game.join_id;
   return __jsx("nav", {
-    className: "chalk flex items-center justify-between flex-wrap p-6 bg-black shadow-xs text-white",
+    className: "chalk flex items-center justify-between flex-wrap p-6 bg-gray-800 shadow-xs text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -804,7 +803,7 @@ var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
 
 function Page(props) {
   return __jsx("div", {
-    className: "h-screen flex flex-col",
+    className: "h-full min-h-screen  flex flex-col bg-gray-900",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -25424,7 +25423,7 @@ function GamePage(props) {
       columnNumber: 5
     }
   }, __jsx("main", {
-    className: "chalk flex flex-1 items-center justify-center bg-teal-900 text-white",
+    className: "flex flex-1 text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -25443,7 +25442,7 @@ function GamePage(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 39,
+      lineNumber: 40,
       columnNumber: 11
     }
   }, __jsx("label", {
@@ -25451,13 +25450,13 @@ function GamePage(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 40,
+      lineNumber: 41,
       columnNumber: 13
     }
   }, "Enter your name"), __jsx("input", {
     autoFocus: true,
     autoComplete: "off",
-    className: "block shadow appearance-none border h-40 mt-3 text-6xl rounded py-2 px-3 text-gray-800 placeholder-gray-400 leading-tight focus:outline-none focus:shadow-outline",
+    className: "block w-full shadow appearance-none border h-24 md:h-40 text-4xl rounded py-2 px-3 text-gray-700 placeholder-gray-400 leading-tight focus:outline-none focus:shadow-outline",
     id: "username",
     type: "text",
     placeholder: "Ricky Bobby",
@@ -25468,7 +25467,7 @@ function GamePage(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 41,
+      lineNumber: 42,
       columnNumber: 13
     }
   }), __jsx("div", {
@@ -25476,16 +25475,16 @@ function GamePage(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 51,
+      lineNumber: 52,
       columnNumber: 13
     }
   }, __jsx("button", {
     type: "submit",
-    className: "mr-5 bg-white hover:bg-gray-200 text-blue-900 font-bold py-2 px-4 border-b-4 border-gray-300 hover:border-gray-400 rounded",
+    className: "mr-4 w-full md:w-auto text-4xl bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg shadow",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 52,
+      lineNumber: 53,
       columnNumber: 15
     }
   }, "Join Game")))));

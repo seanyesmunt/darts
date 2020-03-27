@@ -19,7 +19,7 @@ export default function App({ Component, pageProps }) {
     <React.Fragment>
       <Head>
         <link
-          href="https://fonts.googleapis.com/css?family=Noto+Serif:400,700|Roboto&display=swap"
+          href="https://fonts.googleapis.com/css?family=Roboto:400,700|Mansalva&display=swap"
           rel="stylesheet"
         />
       </Head>
