@@ -33,7 +33,7 @@ export default function GamePage(props: Props) {
 
   return (
     <Page>
-      <main className="flex flex-1 text-white">
+      <main className="flex flex-1 items-center justify-center text-white">
         {isInGame && <Game {...game} />}
 
         {!isInGame && (
@@ -52,7 +52,7 @@ export default function GamePage(props: Props) {
             <div className="mt-5">
               <button
                 type="submit"
-                className="mr-4 w-full md:w-auto text-4xl bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg shadow"
+                className="mt-4 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow"
               >
                 Join Game
               </button>

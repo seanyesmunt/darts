@@ -7,22 +7,16 @@ body {
   font-family: "Roboto", sans-serif;
 }
 
+*:focus {
+  outline: none !important; // boo
+}
+
 .chalk {
   font-family: "Mansalva", cursive;
 }
 
-.score__column {
-  &:not(:last-of-type) {
-    .score__item {
-      border-right-width: 1px;
-    }
-  }
-}
-
 .score__item {
-  height: 6rem;
-
   &:not(:last-of-type) {
-    border-bottom-width: 1px;
+    border-bottom: 1px solid #cbd5e0;
   }
 }

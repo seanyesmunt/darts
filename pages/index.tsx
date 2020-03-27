@@ -37,12 +37,12 @@ export default function Home(props: Props) {
         <h1 className="chalk font-bold text-6xl">Cricket</h1>
         <div className="w-full flex flex-col justify-center md:flex-row mt-5 pb-24 text-center">
           <Link href="/new">
-            <a className="mr-4 w-full md:w-auto text-4xl bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow">
+            <a className="mr-4 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white py-2 px-4 rounded-lg shadow">
               New Game
             </a>
           </Link>
           <Link href="/join">
-            <a className="text-4xl mt-4 md:mt-0 bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg shadow">
+            <a className="text-2xl mt-4 md:mt-0 bg-blue-600 hover:bg-blue-800 text-white py-2 px-4 rounded-lg shadow">
               Join Someone
             </a>
           </Link>

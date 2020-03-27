@@ -454,7 +454,7 @@ function Game(props) {
   }
 
   return hasWinner ? __jsx("div", {
-    className: "px-4 mx-auto",
+    className: "mx-auto",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -463,7 +463,7 @@ function Game(props) {
     }
   }, __jsx("img", {
     src: "/winner.png",
-    className: "w-full max-w-lg mt-8",
+    className: "w-full max-w-md md:mt-8 px-8",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -487,7 +487,7 @@ function Game(props) {
       columnNumber: 7
     }
   }, creator && creator.id === userID ? __jsx("button", {
-    className: "mt-4 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow",
+    className: "mt-4 md:mt-24 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white py-2 px-4 rounded-lg shadow",
     onClick: () => Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["newGame"])(gameID),
     __self: this,
     __source: {
@@ -503,16 +503,33 @@ function Game(props) {
       lineNumber: 83,
       columnNumber: 11
     }
-  }, "Waiting for the host to start the another game..."))) : __jsx(ScoreBoard, {
-    players: players,
-    gameID: gameID,
+  }, "Waiting for the host to start the another game..."))) : __jsx("div", {
+    className: "flex-col overflow-x-scroll",
     __self: this,
     __source: {
       fileName: _jsxFileName,
       lineNumber: 90,
       columnNumber: 5
     }
-  });
+  }, __jsx(ScoreBoard, {
+    players: players,
+    gameID: gameID,
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 91,
+      columnNumber: 7
+    }
+  }), __jsx("button", {
+    className: "mt-24 mb-4 md:w-auto text-2xl bg-gray-800 hover:bg-teal-700 text-white py-2 px-4 text-xs rounded-lg shadow",
+    onClick: () => Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["resetScore"])(gameID, userID),
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 92,
+      columnNumber: 7
+    }
+  }, "Reset Score"));
 }
 
 function ScoreBoard(props) {
@@ -522,18 +539,19 @@ function ScoreBoard(props) {
   } = props;
   const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
   return __jsx("div", {
+    className: "mt-4 md:mt-8 text-sm md:text-2xl bg-teal-800 rounded-lg chalk",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 99,
+      lineNumber: 107,
       columnNumber: 5
     }
   }, __jsx("div", {
-    className: "chalkboard mx-2 chalk text-white border-b-8 shadow-xl",
+    className: "text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 100,
+      lineNumber: 108,
       columnNumber: 7
     }
   }, __jsx("div", {
@@ -541,7 +559,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 101,
+      lineNumber: 109,
       columnNumber: 9
     }
   }, __jsx("div", {
@@ -549,24 +567,24 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 102,
+      lineNumber: 110,
       columnNumber: 11
     }
-  }, ["", 20, 19, 18, 17, 16, 15, "bull"].map(value => {
+  }, ["", 20, 19, 18, 17, 16, 15, "bull"].map((value, index) => {
     return __jsx("div", {
       key: value,
-      className: "score__item px-2 flex items-center justify-center",
+      className: `score__item h-16 ${index === 0 ? "h-24" : ""} md:h-24 px-4 flex items-center justify-center`,
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 105,
+        lineNumber: 113,
         columnNumber: 17
       }
     }, __jsx("span", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 109,
+        lineNumber: 119,
         columnNumber: 19
       }
     }, value));
@@ -582,31 +600,33 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 117,
+        lineNumber: 127,
         columnNumber: 15
       }
     }, __jsx("div", {
-      className: classnames__WEBPACK_IMPORTED_MODULE_1___default()("score__item text-center border-gray-400 p-5", {
-        "bg-teal-600": isMine
+      className: classnames__WEBPACK_IMPORTED_MODULE_1___default()("score__item h-24 md:h-24 w-24 text-center pt-2 ", {
+        "bg-teal-700": isMine
       }),
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 118,
+        lineNumber: 128,
         columnNumber: 17
       }
     }, __jsx("div", {
+      className: "text-lg md:text-md text-gray-300",
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 126,
+        lineNumber: 136,
         columnNumber: 19
       }
     }, name), __jsx("div", {
+      className: "text-4xl",
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 127,
+        lineNumber: 137,
         columnNumber: 19
       }
     }, score.total)), [20, 19, 18, 17, 16, 15, "bull"].map(number => {
@@ -619,21 +639,12 @@ function ScoreBoard(props) {
         __self: this,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 131,
+          lineNumber: 141,
           columnNumber: 21
         }
       });
     }));
-  }))), __jsx("button", {
-    className: "bg-orange-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-8",
-    onClick: () => Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["resetScore"])(gameID, userID),
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 145,
-      columnNumber: 7
-    }
-  }, "Reset Score"));
+  }))));
 }
 
 function ScoreRow(props) {
@@ -651,30 +662,30 @@ function ScoreRow(props) {
   }
 
   return __jsx("div", {
-    className: "score__item flex items-stretch relative",
+    className: "score__item h-16 md:h-24 flex items-stretch relative",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 165,
+      lineNumber: 169,
       columnNumber: 5
     }
   }, __jsx("button", {
     disabled: !isMine,
     onClick: () => handleUpdateScore(),
     className: classnames__WEBPACK_IMPORTED_MODULE_1___default()("flex-1 flex align-center justify-center text-white ont-bold w-100", {
-      "bg-teal-600 hover:bg-teal-500": isMine
+      "bg-teal-700 hover:bg-teal-500": isMine
     }),
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 166,
+      lineNumber: 170,
       columnNumber: 7
     }
   }, score === 1 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 177,
+      lineNumber: 181,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -685,14 +696,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 178,
+      lineNumber: 182,
       columnNumber: 13
     }
   })), score === 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 182,
+      lineNumber: 186,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -703,7 +714,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 183,
+      lineNumber: 187,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -714,14 +725,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 184,
+      lineNumber: 188,
       columnNumber: 13
     }
   })), score === 3 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 188,
+      lineNumber: 192,
       columnNumber: 11
     }
   }, __jsx("circle", {
@@ -731,7 +742,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 189,
+      lineNumber: 193,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -742,7 +753,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 190,
+      lineNumber: 194,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -753,7 +764,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 191,
+      lineNumber: 195,
       columnNumber: 13
     }
   }))));
@@ -767,13 +778,13 @@ function SVG(props) {
     height: 48,
     fill: "none",
     stroke: "white",
-    strokeWidth: "2",
+    strokeWidth: "1",
     strokeLinecap: "round",
     strokeLinejoin: "round",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 201,
+      lineNumber: 205,
       columnNumber: 5
     }
   }, props.children);
@@ -812,7 +823,7 @@ function Header() {
   const [game] = Object(_effects_game__WEBPACK_IMPORTED_MODULE_3__["useGetGame"])(id);
   const joinID = game && game.join_id;
   return __jsx("nav", {
-    className: "chalk flex items-center justify-between flex-wrap p-6 bg-gray-800 shadow-xs text-white",
+    className: "flex items-center justify-between flex-wrap p-6 bg-gray-800 shadow-xs text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -820,7 +831,7 @@ function Header() {
       columnNumber: 5
     }
   }, __jsx("span", {
-    className: "font-semibold text-4xl hover:text-teal-200 tracking-tight",
+    className: "chalk text-4xl hover:text-teal-200 tracking-tight",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -843,7 +854,7 @@ function Header() {
       columnNumber: 11
     }
   }, "darts.now.sh"))), joinID && __jsx("span", {
-    className: "font-semibold text-4xl text-white bg-teal-700 p-2 rounded tracking-tight",
+    className: "text-3xl text-teal-500 bg-gray-700 p-2 rounded-lg tracking-tight",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -855,13 +866,6 @@ function Header() {
     __source: {
       fileName: _jsxFileName,
       lineNumber: 21,
-      columnNumber: 11
-    }
-  }, "#"), __jsx("span", {
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 22,
       columnNumber: 11
     }
   }, joinID)));
@@ -2755,7 +2759,7 @@ function GamePage(props) {
       columnNumber: 5
     }
   }, __jsx("main", {
-    className: "flex flex-1 text-white",
+    className: "flex flex-1 items-center justify-center text-white",
     __self: this,
     __source: {
       fileName: _jsxFileName,
@@ -2810,7 +2814,7 @@ function GamePage(props) {
     }
   }, __jsx("button", {
     type: "submit",
-    className: "mr-4 w-full md:w-auto text-4xl bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg shadow",
+    className: "mt-4 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow",
     __self: this,
     __source: {
       fileName: _jsxFileName,

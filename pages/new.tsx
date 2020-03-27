@@ -34,13 +34,13 @@ export default function NewGame(props: Props) {
             <div className="flex flex-col md:flex-row mt-10 pb-24 text-center">
               <button
                 type="submit"
-                className="mr-4 w-full md:w-auto text-4xl bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow"
+                className="mr-4 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white py-2 px-4 rounded-lg shadow"
               >
                 Create Game
               </button>
               <button
                 onClick={() => Router.back()}
-                className="mt-4 md:mt-0 w-full md:w-auto text-4xl bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg shadow"
+                className="mt-4 md:mt-0 w-full md:w-auto text-2xl bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg shadow"
               >
                 Cancel
               </button>

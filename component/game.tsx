@@ -67,14 +67,14 @@ export default function Game(props) {
   }
 
   return hasWinner ? (
-    <div className="px-4 mx-auto">
-      <img src="/winner.png" className="w-full max-w-lg mt-8" />
+    <div className="mx-auto">
+      <img src="/winner.png" className="w-full max-w-md md:mt-8 px-8" />
       <h1 className="chalk text-6xl px-8">Nice one {winnerName}!</h1>
 
       <div className="px-8">
         {creator && creator.id === userID ? (
           <button
-            className="mt-4 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg shadow"
+            className="mt-4 md:mt-24 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white py-2 px-4 rounded-lg shadow"
             onClick={() => newGame(gameID)}
           >
             New Game
@@ -87,7 +87,15 @@ export default function Game(props) {
       </div>
     </div>
   ) : (
-    <ScoreBoard players={players} gameID={gameID} />
+    <div className="flex-col overflow-x-scroll">
+      <ScoreBoard players={players} gameID={gameID} />
+      <button
+        className="mt-24 mb-4 md:w-auto text-2xl bg-gray-800 hover:bg-teal-700 text-white py-2 px-4 text-xs rounded-lg shadow"
+        onClick={() => resetScore(gameID, userID)}
+      >
+        Reset Score
+      </button>
+    </div>
   );
 }
 
@@ -96,15 +104,17 @@ function ScoreBoard(props) {
   const userID = useGetUserID();
 
   return (
-    <div>
-      <div className="chalkboard mx-2 chalk text-white border-b-8 shadow-xl">
+    <div className="mt-4 md:mt-8 text-sm md:text-2xl bg-teal-800 rounded-lg chalk">
+      <div className="text-white">
         <div className="flex">
           <div className="score__column flex flex-col justify-center align-center">
-            {["", 20, 19, 18, 17, 16, 15, "bull"].map(value => {
+            {["", 20, 19, 18, 17, 16, 15, "bull"].map((value, index) => {
               return (
                 <div
                   key={value}
-                  className="score__item px-2 flex items-center justify-center"
+                  className={`score__item h-16 ${
+                    index === 0 ? "h-24" : ""
+                  } md:h-24 px-4 flex items-center justify-center`}
                 >
                   <span>{value}</span>
                 </div>
@@ -117,14 +127,14 @@ function ScoreBoard(props) {
               <div key={id} className="score__column">
                 <div
                   className={classnames(
-                    "score__item text-center border-gray-400 p-5",
+                    "score__item h-24 md:h-24 w-24 text-center pt-2 ",
                     {
-                      "bg-teal-600": isMine
+                      "bg-teal-700": isMine
                     }
                   )}
                 >
-                  <div>{name}</div>
-                  <div>{score.total}</div>
+                  <div className="text-lg md:text-md text-gray-300">{name}</div>
+                  <div className="text-4xl">{score.total}</div>
                 </div>
                 {[20, 19, 18, 17, 16, 15, "bull"].map(number => {
                   return (
@@ -142,12 +152,6 @@ function ScoreBoard(props) {
           })}
         </div>
       </div>
-      <button
-        className="bg-orange-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-8"
-        onClick={() => resetScore(gameID, userID)}
-      >
-        Reset Score
-      </button>
     </div>
   );
 }
@@ -162,14 +166,14 @@ function ScoreRow(props) {
   }
 
   return (
-    <div className="score__item flex items-stretch relative">
+    <div className="score__item h-16 md:h-24 flex items-stretch relative">
       <button
         disabled={!isMine}
         onClick={() => handleUpdateScore()}
         className={classnames(
           "flex-1 flex align-center justify-center text-white ont-bold w-100",
           {
-            "bg-teal-600 hover:bg-teal-500": isMine
+            "bg-teal-700 hover:bg-teal-500": isMine
           }
         )}
       >
@@ -205,7 +209,7 @@ function SVG(props) {
       height={48}
       fill="none"
       stroke="white"
-      strokeWidth="2"
+      strokeWidth="1"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
