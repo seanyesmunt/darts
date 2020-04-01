@@ -4,7 +4,7 @@
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, createGame, updateGameScore, getGame, getGameId, addPlayerToGame, resetScore, newGame */
+/*! exports provided: getUser, createGame, updateGameScore, getGame, getGameId, addPlayerToGame, gameReset, gameUndoLastMove, newGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -15,7 +15,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetScore", function() { return resetScore; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gameReset", function() { return gameReset; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gameUndoLastMove", function() { return gameUndoLastMove; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "newGame", function() { return newGame; });
 /* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
@@ -179,25 +180,39 @@ function addPlayerToGame(gameID, userID, name) {
     });
   });
 }
-function resetScore(gameID, userID) {// return new Promise((resolve, reject) => {
-  //   db(`games/${gameID}`)
-  //     .once("value")
-  //     .then(snapshot => {
-  //       const game = snapshot.val();
-  //       const newGame = { ...game };
-  //       newGame.players = newGame.players.map(player => {
-  //         if (player.id !== userID) {
-  //           return player;
-  //         }
-  //         return { ...player };
-  //       });
-  //       db("games/" + gameID).set(newGame, error => {
-  //         if (error) {
-  //           console.error("error", error);
-  //         }
-  //       });
-  //     });
-  // });
+function gameReset(gameID, userID) {
+  return new Promise(function (resolve, reject) {
+    db("games/".concat(gameID)).once("value").then(function (snapshot) {
+      var game = snapshot.val();
+
+      var newGame = _objectSpread({}, game);
+
+      newGame.score_events = [];
+      db("games/" + gameID).set(newGame, function (error) {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
+}
+function gameUndoLastMove(gameID) {
+  return new Promise(function (resolve, reject) {
+    db("games/".concat(gameID)).once("value").then(function (snapshot) {
+      var game = snapshot.val();
+
+      var newGame = _objectSpread({}, game);
+
+      var newScoreEvents = newGame.score_events;
+      newScoreEvents.pop();
+      newGame.score_events = newScoreEvents;
+      db("games/" + gameID).set(newGame, function (error) {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
 }
 function newGame(gameID) {
   return new Promise(function (resolve, reject) {
@@ -214,52 +229,6 @@ function newGame(gameID) {
       });
     });
   });
-}
-
-function handleTwoPlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
-  // newPlayers = newPlayers.map(player => {
-  //   if (player.id !== userID) {
-  //     return player;
-  //   }
-  //   const newPlayer = { ...player };
-  //   const scoreForNumber = newPlayer.score[number];
-  //   if (scoreForNumber === 3) {
-  //     // Update other scores
-  //     newPlayer.score.total += typeof number === "string" ? 25 : number;
-  //   } else {
-  //     newPlayer.score[number] = scoreForNumber + 1;
-  //   }
-  //   return { ...newPlayer };
-  // });
-  // return newPlayers;
-}
-
-function handleThreePlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
-  // const amAddingToOtherPlayers = newPlayers.some(player => {
-  //   if (player.id === userID && player.score[number] === 3) {
-  //     return true;
-  //   }
-  // });
-  // if (amAddingToOtherPlayers) {
-  //   newPlayers = newPlayers.map(player => {
-  //     const newPlayer = { ...player };
-  //     if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-  //       newPlayer.score.total += typeof number === "string" ? 25 : number;
-  //     }
-  //     return { ...newPlayer };
-  //   });
-  // } else {
-  //   newPlayers = newPlayers.map(player => {
-  //     if (player.id !== userID) {
-  //       return player;
-  //     }
-  //     const newPlayer = { ...player };
-  //     const scoreForNumber = newPlayer.score[number];
-  //     newPlayer.score[number] = scoreForNumber + 1;
-  //     return { ...newPlayer };
-  //   });
-  // }
-  // return newPlayers;
 }
 
 /***/ }),

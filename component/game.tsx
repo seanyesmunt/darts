@@ -1,7 +1,13 @@
 import React from "react";
 import classnames from "classnames";
 import { useGetUserID } from "../effects/user";
-import { updateGameScore, resetScore, newGame } from "../api/firebase";
+import {
+  updateGameScore,
+  gameReset,
+  newGame,
+  gameUndoLastMove
+} from "../api/firebase";
+import { useGetGame } from "../effects/game";
 
 // 2 person, closed + highest score
 // 3 person, closed + lowest score
@@ -149,7 +155,7 @@ export default function Game(props) {
       <ScoreBoard score={score} gameID={gameID} players={players} />
       <button
         className="mt-24 mb-4 md:w-auto text-2xl bg-gray-800 hover:bg-teal-700 text-white py-2 px-4 text-xs rounded-lg shadow"
-        onClick={() => resetScore(gameID, userID)}
+        onClick={() => gameReset(gameID, userID)}
       >
         Reset Score
       </button>
@@ -160,6 +166,7 @@ export default function Game(props) {
 function ScoreBoard(props) {
   const { players, gameID, score } = props;
   const userID = useGetUserID();
+  const [game, error] = useGetGame(gameID);
 
   return (
     <div className="mt-4 md:mt-8 text-sm md:text-2xl bg-teal-800 rounded-lg chalk">
@@ -172,9 +179,25 @@ function ScoreBoard(props) {
                   key={value}
                   className={`score__item h-16 ${
                     index === 0 ? "h-24" : ""
-                  } md:h-24 px-4 flex items-center justify-center`}
+                  } md:h-24 w-24 px-4 flex items-center justify-center`}
                 >
-                  <span>{value}</span>
+                  <span>
+                    {value === "" && game && game.score_events ? (
+                      <button
+                        onClick={() => gameUndoLastMove(gameID)}
+                        className="bg-teal-600 hover:bg-teal-500 rounded-full"
+                      >
+                        <SVG stroke="1">
+                          <path
+                            stroke="white"
+                            d="M12 10h5a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-5v2a1 1 0 0 1-1.7.7l-4-4a1 1 0 0 1 0-1.4l4-4A1 1 0 0 1 12 8v2z"
+                          />
+                        </SVG>
+                      </button>
+                    ) : (
+                      value
+                    )}
+                  </span>
                 </div>
               );
             })}
@@ -263,6 +286,7 @@ function ScoreRow(props) {
 }
 
 function SVG(props) {
+  const { children, ...rest } = props;
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -274,8 +298,9 @@ function SVG(props) {
       strokeWidth="1"
       strokeLinecap="round"
       strokeLinejoin="round"
+      {...rest}
     >
-      {props.children}
+      {children}
     </svg>
   );
 }

@@ -168,26 +168,41 @@ export function addPlayerToGame(gameID, userID, name) {
     });
 }
 
-export function resetScore(gameID, userID) {
-  // return new Promise((resolve, reject) => {
-  //   db(`games/${gameID}`)
-  //     .once("value")
-  //     .then(snapshot => {
-  //       const game = snapshot.val();
-  //       const newGame = { ...game };
-  //       newGame.players = newGame.players.map(player => {
-  //         if (player.id !== userID) {
-  //           return player;
-  //         }
-  //         return { ...player };
-  //       });
-  //       db("games/" + gameID).set(newGame, error => {
-  //         if (error) {
-  //           console.error("error", error);
-  //         }
-  //       });
-  //     });
-  // });
+export function gameReset(gameID, userID) {
+  return new Promise((resolve, reject) => {
+    db(`games/${gameID}`)
+      .once("value")
+      .then(snapshot => {
+        const game = snapshot.val();
+        const newGame = { ...game };
+        newGame.score_events = [];
+
+        db("games/" + gameID).set(newGame, error => {
+          if (error) {
+            console.error("error", error);
+          }
+        });
+      });
+  });
+}
+export function gameUndoLastMove(gameID) {
+  return new Promise((resolve, reject) => {
+    db(`games/${gameID}`)
+      .once("value")
+      .then(snapshot => {
+        const game = snapshot.val();
+        const newGame = { ...game };
+        let newScoreEvents = newGame.score_events;
+        newScoreEvents.pop();
+        newGame.score_events = newScoreEvents;
+
+        db("games/" + gameID).set(newGame, error => {
+          if (error) {
+            console.error("error", error);
+          }
+        });
+      });
+  });
 }
 
 export function newGame(gameID) {
@@ -206,60 +221,4 @@ export function newGame(gameID) {
         });
       });
   });
-}
-
-function handleTwoPlayerGame(
-  userID: string,
-  originalPlayers: Array<Player>,
-  number: string | number
-) {
-  // let newPlayers = originalPlayers.slice();
-  // newPlayers = newPlayers.map(player => {
-  //   if (player.id !== userID) {
-  //     return player;
-  //   }
-  //   const newPlayer = { ...player };
-  //   const scoreForNumber = newPlayer.score[number];
-  //   if (scoreForNumber === 3) {
-  //     // Update other scores
-  //     newPlayer.score.total += typeof number === "string" ? 25 : number;
-  //   } else {
-  //     newPlayer.score[number] = scoreForNumber + 1;
-  //   }
-  //   return { ...newPlayer };
-  // });
-  // return newPlayers;
-}
-
-function handleThreePlayerGame(
-  userID: string,
-  originalPlayers: Array<Player>,
-  number: string | number
-) {
-  // let newPlayers = originalPlayers.slice();
-  // const amAddingToOtherPlayers = newPlayers.some(player => {
-  //   if (player.id === userID && player.score[number] === 3) {
-  //     return true;
-  //   }
-  // });
-  // if (amAddingToOtherPlayers) {
-  //   newPlayers = newPlayers.map(player => {
-  //     const newPlayer = { ...player };
-  //     if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-  //       newPlayer.score.total += typeof number === "string" ? 25 : number;
-  //     }
-  //     return { ...newPlayer };
-  //   });
-  // } else {
-  //   newPlayers = newPlayers.map(player => {
-  //     if (player.id !== userID) {
-  //       return player;
-  //     }
-  //     const newPlayer = { ...player };
-  //     const scoreForNumber = newPlayer.score[number];
-  //     newPlayer.score[number] = scoreForNumber + 1;
-  //     return { ...newPlayer };
-  //   });
-  // }
-  // return newPlayers;
 }

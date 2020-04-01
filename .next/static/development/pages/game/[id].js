@@ -4,7 +4,7 @@
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, createGame, updateGameScore, getGame, getGameId, addPlayerToGame, resetScore, newGame */
+/*! exports provided: getUser, createGame, updateGameScore, getGame, getGameId, addPlayerToGame, gameReset, gameUndoLastMove, newGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -15,7 +15,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetScore", function() { return resetScore; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gameReset", function() { return gameReset; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gameUndoLastMove", function() { return gameUndoLastMove; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "newGame", function() { return newGame; });
 /* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
@@ -179,25 +180,39 @@ function addPlayerToGame(gameID, userID, name) {
     });
   });
 }
-function resetScore(gameID, userID) {// return new Promise((resolve, reject) => {
-  //   db(`games/${gameID}`)
-  //     .once("value")
-  //     .then(snapshot => {
-  //       const game = snapshot.val();
-  //       const newGame = { ...game };
-  //       newGame.players = newGame.players.map(player => {
-  //         if (player.id !== userID) {
-  //           return player;
-  //         }
-  //         return { ...player };
-  //       });
-  //       db("games/" + gameID).set(newGame, error => {
-  //         if (error) {
-  //           console.error("error", error);
-  //         }
-  //       });
-  //     });
-  // });
+function gameReset(gameID, userID) {
+  return new Promise(function (resolve, reject) {
+    db("games/".concat(gameID)).once("value").then(function (snapshot) {
+      var game = snapshot.val();
+
+      var newGame = _objectSpread({}, game);
+
+      newGame.score_events = [];
+      db("games/" + gameID).set(newGame, function (error) {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
+}
+function gameUndoLastMove(gameID) {
+  return new Promise(function (resolve, reject) {
+    db("games/".concat(gameID)).once("value").then(function (snapshot) {
+      var game = snapshot.val();
+
+      var newGame = _objectSpread({}, game);
+
+      var newScoreEvents = newGame.score_events;
+      newScoreEvents.pop();
+      newGame.score_events = newScoreEvents;
+      db("games/" + gameID).set(newGame, function (error) {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
 }
 function newGame(gameID) {
   return new Promise(function (resolve, reject) {
@@ -216,52 +231,6 @@ function newGame(gameID) {
   });
 }
 
-function handleTwoPlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
-  // newPlayers = newPlayers.map(player => {
-  //   if (player.id !== userID) {
-  //     return player;
-  //   }
-  //   const newPlayer = { ...player };
-  //   const scoreForNumber = newPlayer.score[number];
-  //   if (scoreForNumber === 3) {
-  //     // Update other scores
-  //     newPlayer.score.total += typeof number === "string" ? 25 : number;
-  //   } else {
-  //     newPlayer.score[number] = scoreForNumber + 1;
-  //   }
-  //   return { ...newPlayer };
-  // });
-  // return newPlayers;
-}
-
-function handleThreePlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
-  // const amAddingToOtherPlayers = newPlayers.some(player => {
-  //   if (player.id === userID && player.score[number] === 3) {
-  //     return true;
-  //   }
-  // });
-  // if (amAddingToOtherPlayers) {
-  //   newPlayers = newPlayers.map(player => {
-  //     const newPlayer = { ...player };
-  //     if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-  //       newPlayer.score.total += typeof number === "string" ? 25 : number;
-  //     }
-  //     return { ...newPlayer };
-  //   });
-  // } else {
-  //   newPlayers = newPlayers.map(player => {
-  //     if (player.id !== userID) {
-  //       return player;
-  //     }
-  //     const newPlayer = { ...player };
-  //     const scoreForNumber = newPlayer.score[number];
-  //     newPlayer.score[number] = scoreForNumber + 1;
-  //     return { ...newPlayer };
-  //   });
-  // }
-  // return newPlayers;
-}
-
 /***/ }),
 
 /***/ "./component/game.tsx":
@@ -274,22 +243,28 @@ function handleThreePlayerGame(userID, originalPlayers, number) {// let newPlaye
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Game; });
-/* harmony import */ var _babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
-/* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! classnames */ "./node_modules/classnames/index.js");
-/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../effects/user */ "./effects/user.ts");
-/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var _babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/extends */ "./node_modules/@babel/runtime/helpers/esm/extends.js");
+/* harmony import */ var _babel_runtime_helpers_esm_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/objectWithoutProperties */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js");
+/* harmony import */ var _babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @babel/runtime/helpers/esm/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
+/* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! classnames */ "./node_modules/classnames/index.js");
+/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../effects/user */ "./effects/user.ts");
+/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var _effects_game__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../effects/game */ "./effects/game.ts");
+
+
 
 
 var _jsxFileName = "/Users/sean/Workspace/darts/component/game.tsx";
-var __jsx = react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement;
+var __jsx = react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement;
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { Object(_babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { Object(_babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_3__["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
 
 
 
@@ -304,10 +279,10 @@ function Game(props) {
       creator_id = props.creator_id,
       _props$score_events = props.score_events,
       scoreEvents = _props$score_events === void 0 ? [] : _props$score_events;
-  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])(); // Initialize score object based on how many players there are
+  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_6__["useGetUserID"])(); // Initialize score object based on how many players there are
 
   var score = players.reduce(function (scoreObject, player) {
-    return _objectSpread({}, scoreObject, Object(_babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, player.id, {
+    return _objectSpread({}, scoreObject, Object(_babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_3__["default"])({}, player.id, {
       20: 0,
       19: 0,
       15: 0,
@@ -355,7 +330,7 @@ function Game(props) {
   });
 
   var _Object$values$reduce = Object.values(score).reduce(function (acc, score) {
-    var _acc = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(acc, 2),
+    var _acc = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_2__["default"])(acc, 2),
         currentHighest = _acc[0],
         currentLowest = _acc[1];
 
@@ -372,7 +347,7 @@ function Game(props) {
 
     return [newHighest !== undefined ? currentHighest : 0, newLowest !== undefined ? newLowest : currentLowest];
   }, [0, Infinity]),
-      _Object$values$reduce2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_Object$values$reduce, 2),
+      _Object$values$reduce2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_2__["default"])(_Object$values$reduce, 2),
       highestScore = _Object$values$reduce2[0],
       lowestScore = _Object$values$reduce2[1];
 
@@ -416,7 +391,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 128,
+      lineNumber: 134,
       columnNumber: 5
     }
   }, __jsx("img", {
@@ -425,7 +400,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 129,
+      lineNumber: 135,
       columnNumber: 7
     }
   }), __jsx("h1", {
@@ -433,7 +408,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 130,
+      lineNumber: 136,
       columnNumber: 7
     }
   }, "Nice one ", winnerName, "!"), __jsx("div", {
@@ -441,18 +416,18 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 132,
+      lineNumber: 138,
       columnNumber: 7
     }
   }, creator && creator.id === userID ? __jsx("button", {
     className: "mt-4 md:mt-24 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white py-2 px-4 rounded-lg shadow",
     onClick: function onClick() {
-      return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_5__["newGame"])(gameID);
+      return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_7__["newGame"])(gameID);
     },
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 134,
+      lineNumber: 140,
       columnNumber: 11
     }
   }, "New Game") : __jsx("div", {
@@ -460,7 +435,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 141,
+      lineNumber: 147,
       columnNumber: 11
     }
   }, "Waiting for the host to start the another game..."))) : __jsx("div", {
@@ -468,7 +443,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 148,
+      lineNumber: 154,
       columnNumber: 5
     }
   }, __jsx(ScoreBoard, {
@@ -478,18 +453,18 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 149,
+      lineNumber: 155,
       columnNumber: 7
     }
   }), __jsx("button", {
     className: "mt-24 mb-4 md:w-auto text-2xl bg-gray-800 hover:bg-teal-700 text-white py-2 px-4 text-xs rounded-lg shadow",
     onClick: function onClick() {
-      return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_5__["resetScore"])(gameID, userID);
+      return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_7__["gameReset"])(gameID, userID);
     },
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 150,
+      lineNumber: 156,
       columnNumber: 7
     }
   }, "Reset Score"));
@@ -501,13 +476,19 @@ function ScoreBoard(props) {
   var players = props.players,
       gameID = props.gameID,
       score = props.score;
-  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])();
+  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_6__["useGetUserID"])();
+
+  var _useGetGame = Object(_effects_game__WEBPACK_IMPORTED_MODULE_8__["useGetGame"])(gameID),
+      _useGetGame2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_2__["default"])(_useGetGame, 2),
+      game = _useGetGame2[0],
+      error = _useGetGame2[1];
+
   return __jsx("div", {
     className: "mt-4 md:mt-8 text-sm md:text-2xl bg-teal-800 rounded-lg chalk",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 165,
+      lineNumber: 172,
       columnNumber: 5
     }
   }, __jsx("div", {
@@ -515,7 +496,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 166,
+      lineNumber: 173,
       columnNumber: 7
     }
   }, __jsx("div", {
@@ -523,7 +504,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 167,
+      lineNumber: 174,
       columnNumber: 9
     }
   }, __jsx("div", {
@@ -531,27 +512,55 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 168,
+      lineNumber: 175,
       columnNumber: 11
     }
   }, ["", 20, 19, 18, 17, 16, 15, 25].map(function (value, index) {
     return __jsx("div", {
       key: value,
-      className: "score__item h-16 ".concat(index === 0 ? "h-24" : "", " md:h-24 px-4 flex items-center justify-center"),
+      className: "score__item h-16 ".concat(index === 0 ? "h-24" : "", " md:h-24 w-24 px-4 flex items-center justify-center"),
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 171,
+        lineNumber: 178,
         columnNumber: 17
       }
     }, __jsx("span", {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 177,
+        lineNumber: 184,
         columnNumber: 19
       }
-    }, value));
+    }, value === "" && game && game.score_events ? __jsx("button", {
+      onClick: function onClick() {
+        return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_7__["gameUndoLastMove"])(gameID);
+      },
+      className: "bg-teal-600 hover:bg-teal-500 rounded-full",
+      __self: _this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 186,
+        columnNumber: 23
+      }
+    }, __jsx(SVG, {
+      stroke: "1",
+      __self: _this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 190,
+        columnNumber: 25
+      }
+    }, __jsx("path", {
+      stroke: "white",
+      d: "M12 10h5a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-5v2a1 1 0 0 1-1.7.7l-4-4a1 1 0 0 1 0-1.4l4-4A1 1 0 0 1 12 8v2z",
+      __self: _this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 191,
+        columnNumber: 27
+      }
+    }))) : value));
   })), Object.keys(score).map(function (userIDForScore) {
     var player = players.find(function (player) {
       return player.id === userIDForScore;
@@ -564,17 +573,17 @@ function ScoreBoard(props) {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 187,
+        lineNumber: 210,
         columnNumber: 15
       }
     }, __jsx("div", {
-      className: classnames__WEBPACK_IMPORTED_MODULE_3___default()("score__item h-24 md:h-24 w-24 text-center pt-2 ", {
+      className: classnames__WEBPACK_IMPORTED_MODULE_5___default()("score__item h-24 md:h-24 w-24 text-center pt-2 ", {
         "bg-teal-700": isMine
       }),
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 188,
+        lineNumber: 211,
         columnNumber: 17
       }
     }, __jsx("div", {
@@ -582,7 +591,7 @@ function ScoreBoard(props) {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 196,
+        lineNumber: 219,
         columnNumber: 19
       }
     }, player.name), __jsx("div", {
@@ -590,7 +599,7 @@ function ScoreBoard(props) {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 199,
+        lineNumber: 222,
         columnNumber: 19
       }
     }, userScore.total)), [20, 19, 18, 17, 16, 15, 25].map(function (number) {
@@ -603,7 +612,7 @@ function ScoreBoard(props) {
         __self: _this,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 203,
+          lineNumber: 226,
           columnNumber: 21
         }
       });
@@ -616,11 +625,11 @@ function ScoreRow(props) {
       score = props.score,
       gameID = props.gameID,
       playerID = props.playerID;
-  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])();
+  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_6__["useGetUserID"])();
   var isMine = playerID === userID;
 
   function handleupdateGameScore() {
-    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_5__["updateGameScore"])(gameID, userID, number);
+    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_7__["updateGameScore"])(gameID, userID, number);
   }
 
   return __jsx("div", {
@@ -628,7 +637,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 231,
+      lineNumber: 254,
       columnNumber: 5
     }
   }, __jsx("button", {
@@ -636,20 +645,20 @@ function ScoreRow(props) {
     onClick: function onClick() {
       return handleupdateGameScore();
     },
-    className: classnames__WEBPACK_IMPORTED_MODULE_3___default()("flex-1 flex align-center justify-center text-white ont-bold w-100", {
+    className: classnames__WEBPACK_IMPORTED_MODULE_5___default()("flex-1 flex align-center justify-center text-white ont-bold w-100", {
       "bg-teal-700 hover:bg-teal-500": isMine
     }),
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 232,
+      lineNumber: 255,
       columnNumber: 7
     }
   }, score === 1 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 243,
+      lineNumber: 266,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -660,14 +669,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 244,
+      lineNumber: 267,
       columnNumber: 13
     }
   })), score === 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 248,
+      lineNumber: 271,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -678,7 +687,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 249,
+      lineNumber: 272,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -689,14 +698,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 250,
+      lineNumber: 273,
       columnNumber: 13
     }
   })), score > 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 254,
+      lineNumber: 277,
       columnNumber: 11
     }
   }, __jsx("circle", {
@@ -706,7 +715,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 255,
+      lineNumber: 278,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -717,7 +726,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 256,
+      lineNumber: 279,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -728,14 +737,17 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 257,
+      lineNumber: 280,
       columnNumber: 13
     }
   }))));
 }
 
 function SVG(props) {
-  return __jsx("svg", {
+  var children = props.children,
+      rest = Object(_babel_runtime_helpers_esm_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_1__["default"])(props, ["children"]);
+
+  return __jsx("svg", Object(_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({
     xmlns: "http://www.w3.org/2000/svg",
     viewBox: "0 0 24 24",
     width: 48,
@@ -744,14 +756,15 @@ function SVG(props) {
     stroke: "white",
     strokeWidth: "1",
     strokeLinecap: "round",
-    strokeLinejoin: "round",
+    strokeLinejoin: "round"
+  }, rest, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 267,
+      lineNumber: 291,
       columnNumber: 5
     }
-  }, props.children);
+  }), children);
 }
 
 /***/ }),
@@ -1271,6 +1284,66 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return _nonIterableRest; });
 function _nonIterableRest() {
   throw new TypeError("Invalid attempt to destructure non-iterable instance");
+}
+
+/***/ }),
+
+/***/ "./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js":
+/*!****************************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js ***!
+  \****************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return _objectWithoutProperties; });
+/* harmony import */ var _objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./objectWithoutPropertiesLoose */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js");
+
+function _objectWithoutProperties(source, excluded) {
+  if (source == null) return {};
+  var target = Object(_objectWithoutPropertiesLoose__WEBPACK_IMPORTED_MODULE_0__["default"])(source, excluded);
+  var key, i;
+
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+    for (i = 0; i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      target[key] = source[key];
+    }
+  }
+
+  return target;
+}
+
+/***/ }),
+
+/***/ "./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js":
+/*!*********************************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js ***!
+  \*********************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return _objectWithoutPropertiesLoose; });
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  return target;
 }
 
 /***/ }),

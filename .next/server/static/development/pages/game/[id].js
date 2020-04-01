@@ -97,7 +97,7 @@ module.exports =
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, createGame, updateGameScore, getGame, getGameId, addPlayerToGame, resetScore, newGame */
+/*! exports provided: getUser, createGame, updateGameScore, getGame, getGameId, addPlayerToGame, gameReset, gameUndoLastMove, newGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -108,7 +108,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetScore", function() { return resetScore; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gameReset", function() { return gameReset; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "gameUndoLastMove", function() { return gameUndoLastMove; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "newGame", function() { return newGame; });
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "uuid");
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(uuid__WEBPACK_IMPORTED_MODULE_0__);
@@ -273,25 +274,39 @@ function addPlayerToGame(gameID, userID, name) {
     });
   });
 }
-function resetScore(gameID, userID) {// return new Promise((resolve, reject) => {
-  //   db(`games/${gameID}`)
-  //     .once("value")
-  //     .then(snapshot => {
-  //       const game = snapshot.val();
-  //       const newGame = { ...game };
-  //       newGame.players = newGame.players.map(player => {
-  //         if (player.id !== userID) {
-  //           return player;
-  //         }
-  //         return { ...player };
-  //       });
-  //       db("games/" + gameID).set(newGame, error => {
-  //         if (error) {
-  //           console.error("error", error);
-  //         }
-  //       });
-  //     });
-  // });
+function gameReset(gameID, userID) {
+  return new Promise((resolve, reject) => {
+    db(`games/${gameID}`).once("value").then(snapshot => {
+      const game = snapshot.val();
+
+      const newGame = _objectSpread({}, game);
+
+      newGame.score_events = [];
+      db("games/" + gameID).set(newGame, error => {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
+}
+function gameUndoLastMove(gameID) {
+  return new Promise((resolve, reject) => {
+    db(`games/${gameID}`).once("value").then(snapshot => {
+      const game = snapshot.val();
+
+      const newGame = _objectSpread({}, game);
+
+      let newScoreEvents = newGame.score_events;
+      newScoreEvents.pop();
+      newGame.score_events = newScoreEvents;
+      db("games/" + gameID).set(newGame, error => {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
 }
 function newGame(gameID) {
   return new Promise((resolve, reject) => {
@@ -308,52 +323,6 @@ function newGame(gameID) {
       });
     });
   });
-}
-
-function handleTwoPlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
-  // newPlayers = newPlayers.map(player => {
-  //   if (player.id !== userID) {
-  //     return player;
-  //   }
-  //   const newPlayer = { ...player };
-  //   const scoreForNumber = newPlayer.score[number];
-  //   if (scoreForNumber === 3) {
-  //     // Update other scores
-  //     newPlayer.score.total += typeof number === "string" ? 25 : number;
-  //   } else {
-  //     newPlayer.score[number] = scoreForNumber + 1;
-  //   }
-  //   return { ...newPlayer };
-  // });
-  // return newPlayers;
-}
-
-function handleThreePlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
-  // const amAddingToOtherPlayers = newPlayers.some(player => {
-  //   if (player.id === userID && player.score[number] === 3) {
-  //     return true;
-  //   }
-  // });
-  // if (amAddingToOtherPlayers) {
-  //   newPlayers = newPlayers.map(player => {
-  //     const newPlayer = { ...player };
-  //     if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-  //       newPlayer.score.total += typeof number === "string" ? 25 : number;
-  //     }
-  //     return { ...newPlayer };
-  //   });
-  // } else {
-  //   newPlayers = newPlayers.map(player => {
-  //     if (player.id !== userID) {
-  //       return player;
-  //     }
-  //     const newPlayer = { ...player };
-  //     const scoreForNumber = newPlayer.score[number];
-  //     newPlayer.score[number] = scoreForNumber + 1;
-  //     return { ...newPlayer };
-  //   });
-  // }
-  // return newPlayers;
 }
 
 /***/ }),
@@ -374,14 +343,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../effects/user */ "./effects/user.ts");
 /* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var _effects_game__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../effects/game */ "./effects/game.ts");
 var _jsxFileName = "/Users/sean/Workspace/darts/component/game.tsx";
 var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
+
+function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 
 
 
@@ -497,7 +474,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 128,
+      lineNumber: 134,
       columnNumber: 5
     }
   }, __jsx("img", {
@@ -506,7 +483,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 129,
+      lineNumber: 135,
       columnNumber: 7
     }
   }), __jsx("h1", {
@@ -514,7 +491,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 130,
+      lineNumber: 136,
       columnNumber: 7
     }
   }, "Nice one ", winnerName, "!"), __jsx("div", {
@@ -522,7 +499,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 132,
+      lineNumber: 138,
       columnNumber: 7
     }
   }, creator && creator.id === userID ? __jsx("button", {
@@ -531,7 +508,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 134,
+      lineNumber: 140,
       columnNumber: 11
     }
   }, "New Game") : __jsx("div", {
@@ -539,7 +516,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 141,
+      lineNumber: 147,
       columnNumber: 11
     }
   }, "Waiting for the host to start the another game..."))) : __jsx("div", {
@@ -547,7 +524,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 148,
+      lineNumber: 154,
       columnNumber: 5
     }
   }, __jsx(ScoreBoard, {
@@ -557,16 +534,16 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 149,
+      lineNumber: 155,
       columnNumber: 7
     }
   }), __jsx("button", {
     className: "mt-24 mb-4 md:w-auto text-2xl bg-gray-800 hover:bg-teal-700 text-white py-2 px-4 text-xs rounded-lg shadow",
-    onClick: () => Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["resetScore"])(gameID, userID),
+    onClick: () => Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["gameReset"])(gameID, userID),
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 150,
+      lineNumber: 156,
       columnNumber: 7
     }
   }, "Reset Score"));
@@ -579,12 +556,13 @@ function ScoreBoard(props) {
     score
   } = props;
   const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
+  const [game, error] = Object(_effects_game__WEBPACK_IMPORTED_MODULE_4__["useGetGame"])(gameID);
   return __jsx("div", {
     className: "mt-4 md:mt-8 text-sm md:text-2xl bg-teal-800 rounded-lg chalk",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 165,
+      lineNumber: 172,
       columnNumber: 5
     }
   }, __jsx("div", {
@@ -592,7 +570,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 166,
+      lineNumber: 173,
       columnNumber: 7
     }
   }, __jsx("div", {
@@ -600,7 +578,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 167,
+      lineNumber: 174,
       columnNumber: 9
     }
   }, __jsx("div", {
@@ -608,27 +586,53 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 168,
+      lineNumber: 175,
       columnNumber: 11
     }
   }, ["", 20, 19, 18, 17, 16, 15, 25].map((value, index) => {
     return __jsx("div", {
       key: value,
-      className: `score__item h-16 ${index === 0 ? "h-24" : ""} md:h-24 px-4 flex items-center justify-center`,
+      className: `score__item h-16 ${index === 0 ? "h-24" : ""} md:h-24 w-24 px-4 flex items-center justify-center`,
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 171,
+        lineNumber: 178,
         columnNumber: 17
       }
     }, __jsx("span", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 177,
+        lineNumber: 184,
         columnNumber: 19
       }
-    }, value));
+    }, value === "" && game && game.score_events ? __jsx("button", {
+      onClick: () => Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["gameUndoLastMove"])(gameID),
+      className: "bg-teal-600 hover:bg-teal-500 rounded-full",
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 186,
+        columnNumber: 23
+      }
+    }, __jsx(SVG, {
+      stroke: "1",
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 190,
+        columnNumber: 25
+      }
+    }, __jsx("path", {
+      stroke: "white",
+      d: "M12 10h5a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-5v2a1 1 0 0 1-1.7.7l-4-4a1 1 0 0 1 0-1.4l4-4A1 1 0 0 1 12 8v2z",
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 191,
+        columnNumber: 27
+      }
+    }))) : value));
   })), Object.keys(score).map(userIDForScore => {
     const player = players.find(player => player.id === userIDForScore);
     const userScore = score[userIDForScore];
@@ -639,7 +643,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 187,
+        lineNumber: 210,
         columnNumber: 15
       }
     }, __jsx("div", {
@@ -649,7 +653,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 188,
+        lineNumber: 211,
         columnNumber: 17
       }
     }, __jsx("div", {
@@ -657,7 +661,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 196,
+        lineNumber: 219,
         columnNumber: 19
       }
     }, player.name), __jsx("div", {
@@ -665,7 +669,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 199,
+        lineNumber: 222,
         columnNumber: 19
       }
     }, userScore.total)), [20, 19, 18, 17, 16, 15, 25].map(number => {
@@ -678,7 +682,7 @@ function ScoreBoard(props) {
         __self: this,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 203,
+          lineNumber: 226,
           columnNumber: 21
         }
       });
@@ -705,7 +709,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 231,
+      lineNumber: 254,
       columnNumber: 5
     }
   }, __jsx("button", {
@@ -717,14 +721,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 232,
+      lineNumber: 255,
       columnNumber: 7
     }
   }, score === 1 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 243,
+      lineNumber: 266,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -735,14 +739,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 244,
+      lineNumber: 267,
       columnNumber: 13
     }
   })), score === 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 248,
+      lineNumber: 271,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -753,7 +757,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 249,
+      lineNumber: 272,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -764,14 +768,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 250,
+      lineNumber: 273,
       columnNumber: 13
     }
   })), score > 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 254,
+      lineNumber: 277,
       columnNumber: 11
     }
   }, __jsx("circle", {
@@ -781,7 +785,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 255,
+      lineNumber: 278,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -792,7 +796,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 256,
+      lineNumber: 279,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -803,14 +807,19 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 257,
+      lineNumber: 280,
       columnNumber: 13
     }
   }))));
 }
 
 function SVG(props) {
-  return __jsx("svg", {
+  const {
+    children
+  } = props,
+        rest = _objectWithoutProperties(props, ["children"]);
+
+  return __jsx("svg", _extends({
     xmlns: "http://www.w3.org/2000/svg",
     viewBox: "0 0 24 24",
     width: 48,
@@ -819,14 +828,15 @@ function SVG(props) {
     stroke: "white",
     strokeWidth: "1",
     strokeLinecap: "round",
-    strokeLinejoin: "round",
+    strokeLinejoin: "round"
+  }, rest, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 267,
+      lineNumber: 291,
       columnNumber: 5
     }
-  }, props.children);
+  }), children);
 }
 
 /***/ }),

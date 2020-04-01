@@ -15,8 +15,6 @@ body {
   font-family: "Mansalva", cursive;
 }
 
-.score__item {
-  &:not(:last-of-type) {
-    border-bottom: 1px solid #cbd5e0;
-  }
+.refresh__icon {
+  fill: white;
 }
