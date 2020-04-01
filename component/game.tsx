@@ -47,26 +47,31 @@ export default function Game(props) {
 
     const { user_id: scoreEventUserID, hit_value: hitValue } = scoreEvent;
 
-    const usersScoreForHitValue = score[scoreEventUserID][hitValue];
+    const usersScoreForHitValue = Number(score[scoreEventUserID][hitValue]);
     if (usersScoreForHitValue < 3) {
-      score[scoreEventUserID][hitValue] += 1;
+      // Something because of typescript. Not sure yet
+      if (typeof score[scoreEventUserID][hitValue] === "number") {
+        score[scoreEventUserID][hitValue] += 1;
+      }
     } else {
-      if (players.length > 2) {
-        // Add score to other players that don't have hitValue closed out
+      // The user already closed that number out
+      // If 2 player game, add it to their own score
+      // Else, add it to the other players who haven't closed it yet's score
+      if (players.length < 3) {
         players.forEach((player: Player) => {
-          const wasMyHit = player.id === scoreEventUserID;
-          if (wasMyHit) {
-            score[player.id] += hitValue;
+          const wasPlayersOwnHit = player.id === scoreEventUserID;
+          if (wasPlayersOwnHit) {
+            score[player.id].total += hitValue;
           }
         });
       } else {
-        // Add score to my score if players that don't have hitValue closed out
+        // Add score to users own score if players that don't have hitValue closed out
         players.forEach((player: Player) => {
           const isOtherPlayer = player.id !== scoreEventUserID;
           const playersScoreForHitValue = score[player.id][hitValue];
 
           if (isOtherPlayer && playersScoreForHitValue < 3) {
-            score[userID].total += hitValue;
+            score[player.id].total += hitValue;
           }
         });
       }
