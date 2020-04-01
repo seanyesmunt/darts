@@ -1,70 +1,128 @@
 import React from "react";
 import classnames from "classnames";
 import { useGetUserID } from "../effects/user";
-import { updateScore, resetScore, newGame } from "../api/firebase";
+import { updateGameScore, resetScore, newGame } from "../api/firebase";
 
 // 2 person, closed + highest score
 // 3 person, closed + lowest score
 
 export default function Game(props) {
-  const { join_id, players, id: gameID, creator_id } = props;
+  const {
+    join_id,
+    players,
+    id: gameID,
+    creator_id,
+    score_events: scoreEvents = []
+  } = props;
   const userID = useGetUserID();
-  const highestScore = players.reduce((acc, player) => {
-    if (player.score.total > acc) {
-      return player.score.total;
-    } else {
-      return acc;
-    }
-  }, 0);
 
-  const lowestScore = players.reduce((acc, player) => {
-    if (player.score.total < acc) {
-      return player.score.total;
-    } else {
-      return acc;
+  // Initialize score object based on how many players there are
+  let score: Score = players.reduce((scoreObject, player) => {
+    return {
+      ...scoreObject,
+      [player.id]: {
+        20: 0,
+        19: 0,
+        15: 0,
+        18: 0,
+        17: 0,
+        16: 0,
+        25: 0,
+        total: 0
+      }
+    };
+  }, {});
+
+  // For each `score_event`, update the score for everyone
+  scoreEvents.forEach((scoreEvent: ScoreEvent) => {
+    if (!userID) {
+      return;
     }
-  }, Infinity);
+
+    const { user_id: scoreEventUserID, hit_value: hitValue } = scoreEvent;
+
+    const usersScoreForHitValue = score[scoreEventUserID][hitValue];
+    if (usersScoreForHitValue < 3) {
+      score[scoreEventUserID][hitValue] += 1;
+    } else {
+      if (players.length > 2) {
+        // Add score to other players that don't have hitValue closed out
+        players.forEach((player: Player) => {
+          const wasMyHit = player.id === scoreEventUserID;
+          if (wasMyHit) {
+            score[player.id] += hitValue;
+          }
+        });
+      } else {
+        // Add score to my score if players that don't have hitValue closed out
+        players.forEach((player: Player) => {
+          const isOtherPlayer = player.id !== scoreEventUserID;
+          const playersScoreForHitValue = score[player.id][hitValue];
+
+          if (isOtherPlayer && playersScoreForHitValue < 3) {
+            score[userID].total += hitValue;
+          }
+        });
+      }
+    }
+  });
+
+  const [highestScore, lowestScore] = Object.values(score).reduce(
+    (acc: [number, number], score: Score) => {
+      const [currentHighest, currentLowest] = acc;
+      let newHighest: number;
+      let newLowest: number;
+
+      if (score.total > currentHighest) {
+        newHighest = score.total;
+      }
+
+      if (score.total < currentLowest) {
+        newLowest = score.total;
+      }
+
+      return [
+        newHighest !== undefined ? currentHighest : 0,
+        newLowest !== undefined ? newLowest : currentLowest
+      ];
+    },
+    [0, Infinity]
+  );
 
   const creator = players.find(player => player.id === creator_id);
 
   let hasWinner = false;
-  let winnerName;
-  for (var i = 0; i < players.length; i++) {
-    const player = players[i];
-    const scores = player.score;
-    const total =
-      scores[15] +
-      scores[16] +
-      scores[17] +
-      scores[18] +
-      scores[19] +
-      scores[20] +
-      scores["bull"];
+  let winnerName: string;
 
-    if (total === 21) {
-      if (players.length > 2) {
-        // Does player have the lowest score?
-        const isLowest = players.some(player => {
-          return player.score.total === lowestScore;
-        });
+  Object.keys(score).forEach(userID => {
+    const scoreForUserID = score[userID];
+    const hasClosedOutBoard =
+      scoreForUserID[15] === 3 &&
+      scoreForUserID[16] === 3 &&
+      scoreForUserID[17] === 3 &&
+      scoreForUserID[18] === 3 &&
+      scoreForUserID[19] === 3 &&
+      scoreForUserID[20] === 3 &&
+      scoreForUserID[25] === 3;
 
-        if (isLowest) {
+    if (hasClosedOutBoard) {
+      if (players.length < 3) {
+        const isHightest = scoreForUserID.total === highestScore;
+        if (isHightest) {
           hasWinner = true;
+          const player = players.find(player => player.id === userID);
           winnerName = player.name;
         }
       } else {
-        // Does player have the highest score?
-        const isHighest = players.some(player => {
-          return player.score.total === highestScore;
-        });
-
-        if (isHighest) {
+        const isLowest = scoreForUserID.total === lowestScore;
+        if (isLowest) {
           hasWinner = true;
+          const player = players.find(player => player.id === userID);
           winnerName = player.name;
         }
       }
     }
-  }
+  });
 
   return hasWinner ? (
     <div className="mx-auto">
@@ -88,7 +146,7 @@ export default function Game(props) {
     </div>
   ) : (
     <div className="flex-col overflow-x-scroll">
-      <ScoreBoard players={players} gameID={gameID} />
+      <ScoreBoard score={score} gameID={gameID} players={players} />
       <button
         className="mt-24 mb-4 md:w-auto text-2xl bg-gray-800 hover:bg-teal-700 text-white py-2 px-4 text-xs rounded-lg shadow"
         onClick={() => resetScore(gameID, userID)}
@@ -100,7 +158,7 @@ export default function Game(props) {
 }
 
 function ScoreBoard(props) {
-  const { players, gameID } = props;
+  const { players, gameID, score } = props;
   const userID = useGetUserID();
 
   return (
@@ -108,7 +166,7 @@ function ScoreBoard(props) {
       <div className="text-white">
         <div className="flex">
           <div className="score__column flex flex-col justify-center align-center">
-            {["", 20, 19, 18, 17, 16, 15, "bull"].map((value, index) => {
+            {["", 20, 19, 18, 17, 16, 15, 25].map((value, index) => {
               return (
                 <div
                   key={value}
@@ -121,10 +179,12 @@ function ScoreBoard(props) {
               );
             })}
           </div>
-          {players.map(({ id, name, score }) => {
-            const isMine = id === userID;
+          {Object.keys(score).map(userIDForScore => {
+            const player = players.find(player => player.id === userIDForScore);
+            const userScore = score[userIDForScore];
+            const isMine = userIDForScore === userID;
             return (
-              <div key={id} className="score__column">
+              <div key={userIDForScore} className="score__column">
                 <div
                   className={classnames(
                     "score__item h-24 md:h-24 w-24 text-center pt-2 ",
@@ -133,16 +193,18 @@ function ScoreBoard(props) {
                     }
                   )}
                 >
-                  <div className="text-lg md:text-md text-gray-300">{name}</div>
-                  <div className="text-4xl">{score.total}</div>
+                  <div className="text-lg md:text-md text-gray-300">
+                    {player.name}
+                  </div>
+                  <div className="text-4xl">{userScore.total}</div>
                 </div>
-                {[20, 19, 18, 17, 16, 15, "bull"].map(number => {
+                {[20, 19, 18, 17, 16, 15, 25].map(number => {
                   return (
                     <ScoreRow
                       key={number}
                       number={number}
-                      score={score[number]}
-                      playerID={id}
+                      score={score[userIDForScore][number]}
+                      playerID={userIDForScore}
                       gameID={gameID}
                     />
                   );
@@ -161,15 +223,15 @@ function ScoreRow(props) {
   const userID = useGetUserID();
   const isMine = playerID === userID;
 
-  function handleUpdateScore() {
-    updateScore(gameID, userID, number);
+  function handleupdateGameScore() {
+    updateGameScore(gameID, userID, number);
   }
 
   return (
     <div className="score__item h-16 md:h-24 flex items-stretch relative">
       <button
         disabled={!isMine}
-        onClick={() => handleUpdateScore()}
+        onClick={() => handleupdateGameScore()}
         className={classnames(
           "flex-1 flex align-center justify-center text-white ont-bold w-100",
           {
@@ -188,7 +250,7 @@ function ScoreRow(props) {
             <line x1="9" y1="9" x2="15" y2="15" />
           </SVG>
         )}
-        {score === 3 && (
+        {score > 2 && (
           <SVG>
             <circle cx="12" cy="12" r="10" />
             <line x1="15" y1="9" x2="9" y2="15" />

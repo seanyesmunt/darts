@@ -4,17 +4,17 @@
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame, updateScore, resetScore, newGame */
+/*! exports provided: getUser, createGame, updateGameScore, getGame, getGameId, addPlayerToGame, resetScore, newGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getUser", function() { return getUser; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createGame", function() { return createGame; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateGameScore", function() { return updateGameScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createGame", function() { return createGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateScore", function() { return updateScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetScore", function() { return resetScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "newGame", function() { return newGame; });
 /* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
@@ -30,7 +30,6 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 
 
- // DB types
 
 var config = {
   apiKey: "AIzaSyDp01-0TwxRjNC05CuDcpauXRyLSMv0RRw",
@@ -47,37 +46,23 @@ if (!firebase_app__WEBPACK_IMPORTED_MODULE_2__["apps"].length) {
   firebase_app__WEBPACK_IMPORTED_MODULE_2__["initializeApp"](config);
 }
 
-var db = firebase_app__WEBPACK_IMPORTED_MODULE_2__["database"]();
-var DEFAULT_SCORE = {
-  20: 0,
-  19: 0,
-  18: 0,
-  17: 0,
-  16: 0,
-  15: 0,
-  bull: 0,
-  total: 0
-};
-function getUser(userID) {
-  return db.ref("/users/" + userID).once("value").then(function (snapshot) {
-    var user = snapshot.val();
+var database = firebase_app__WEBPACK_IMPORTED_MODULE_2__["database"]();
 
-    if (user) {
-      return _objectSpread({}, user, {
-        id: userID
-      });
-    }
+function db(ref) {
+  return database.ref("/v1/".concat(ref));
+} //
+//
+// User
+//
+//
 
-    return createUser(userID);
-  });
-}
 
 function createUser(userID) {
   var user = {
     created_at: Date.now()
   };
   return new Promise(function (resolve, reject) {
-    db.ref("users/" + userID).set(user, function (error) {
+    db("users/" + userID).set(user, function (error) {
       if (error) {
         reject(error);
       }
@@ -89,9 +74,73 @@ function createUser(userID) {
   });
 }
 
+function getUser(userID) {
+  return db("users/".concat(userID)).once("value").then(function (snapshot) {
+    var user = snapshot.val();
+
+    if (user) {
+      return _objectSpread({}, user, {
+        id: userID
+      });
+    }
+
+    return createUser(userID);
+  });
+} //
+//
+// Games
+//
+//
+
+function createGame(userID, name) {
+  var gameID = Object(uuid__WEBPACK_IMPORTED_MODULE_1__["v4"])();
+  var game = {
+    creator_id: userID,
+    join_id: gameID.slice(0, 4),
+    score_events: [],
+    players: [{
+      id: userID,
+      name: name
+    }]
+  };
+  return new Promise(function (resolve, reject) {
+    db("games/".concat(gameID)).set(game, function (error) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(_objectSpread({}, game, {
+          id: gameID
+        }));
+      }
+    });
+  });
+}
+function updateGameScore(gameID, userID, hitValue) {
+  return new Promise(function (resolve, reject) {
+    db("games/".concat(gameID)).once("value").then(function (snapshot) {
+      var game = snapshot.val();
+
+      var newGame = _objectSpread({}, game);
+
+      if (!newGame.score_events) {
+        newGame.score_events = [];
+      }
+
+      newGame.score_events.push({
+        user_id: userID,
+        hit_value: hitValue
+      });
+      db("games/" + gameID).set(newGame, function (error) {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
+}
 function getGame(gameID, userID, onUpdate) {
   return new Promise(function (resolve, reject) {
-    db.ref("/games/" + gameID).on("value", function (snapshot) {
+    db("/games/".concat(gameID)).on("value", function (snapshot) {
       var game = snapshot.val();
       onUpdate(game);
     });
@@ -99,7 +148,7 @@ function getGame(gameID, userID, onUpdate) {
 }
 function getGameId(join_id) {
   return new Promise(function (resolve, reject) {
-    db.ref("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
+    db("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
       snapshot.forEach(function (data) {
         var id = data.key;
 
@@ -112,107 +161,53 @@ function getGameId(join_id) {
     });
   });
 }
-function createGame(userID, name) {
-  var gameID = Object(uuid__WEBPACK_IMPORTED_MODULE_1__["v4"])();
-  var game = {
-    creator_id: userID,
-    join_id: gameID.slice(0, 4),
-    players: [{
-      id: userID,
-      name: name,
-      score: DEFAULT_SCORE
-    }]
-  };
-  return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).set(game, function (error) {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(_objectSpread({}, game, {
-          id: gameID
-        }));
-      }
-    });
-  });
-}
 function addPlayerToGame(gameID, userID, name) {
-  return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).once("value").then(function (snapshot) {
-      var game = snapshot.val();
+  db("games/".concat(gameID)).once("value").then(function (snapshot) {
+    var game = snapshot.val();
 
-      if (!game.players.some(function (player) {
-        return player.id === userID;
-      })) {
-        var _newGame = _objectSpread({}, game, {
-          players: game.players.concat({
-            id: userID,
-            name: name,
-            score: DEFAULT_SCORE
-          })
-        });
+    var newGame = _objectSpread({}, game, {
+      players: game.players.concat({
+        id: userID,
+        name: name
+      })
+    });
 
-        db.ref("games/" + gameID).update(_newGame, function (error) {
-          if (error) {
-            console.error("error", error);
-          }
-        });
+    db("games/" + gameID).update(newGame, function (error) {
+      if (error) {
+        console.error("error", error);
       }
     });
   });
 }
-function updateScore(gameID, userID, number) {
-  return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).once("value").then(function (snapshot) {
-      var game = snapshot.val();
-
-      var newGame = _objectSpread({}, game);
-
-      newGame.players = newGame.players.length > 2 ? handleThreePlayerGame(userID, newGame.players, number) : handleTwoPlayerGame(userID, newGame.players, number);
-      db.ref("games/" + gameID).set(newGame, function (error) {
-        if (error) {
-          console.error("error", error);
-        }
-      });
-    });
-  });
-}
-function resetScore(gameID, userID) {
-  return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).once("value").then(function (snapshot) {
-      var game = snapshot.val();
-
-      var newGame = _objectSpread({}, game);
-
-      newGame.players = newGame.players.map(function (player) {
-        if (player.id !== userID) {
-          return player;
-        }
-
-        return _objectSpread({}, player, {
-          score: DEFAULT_SCORE
-        });
-      });
-      db.ref("games/" + gameID).set(newGame, function (error) {
-        if (error) {
-          console.error("error", error);
-        }
-      });
-    });
-  });
+function resetScore(gameID, userID) {// return new Promise((resolve, reject) => {
+  //   db(`games/${gameID}`)
+  //     .once("value")
+  //     .then(snapshot => {
+  //       const game = snapshot.val();
+  //       const newGame = { ...game };
+  //       newGame.players = newGame.players.map(player => {
+  //         if (player.id !== userID) {
+  //           return player;
+  //         }
+  //         return { ...player };
+  //       });
+  //       db("games/" + gameID).set(newGame, error => {
+  //         if (error) {
+  //           console.error("error", error);
+  //         }
+  //       });
+  //     });
+  // });
 }
 function newGame(gameID) {
   return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).once("value").then(function (snapshot) {
+    db("games/" + gameID).once("value").then(function (snapshot) {
       var game = snapshot.val();
 
       var newGame = _objectSpread({}, game);
 
-      newGame.players = newGame.players.map(function (player) {
-        return _objectSpread({}, player, {
-          score: DEFAULT_SCORE
-        });
-      });
-      db.ref("games/" + gameID).set(newGame, function (error) {
+      newGame.score_events = [];
+      db("games/" + gameID).set(newGame, function (error) {
         if (error) {
           console.error("error", error);
         }
@@ -221,62 +216,50 @@ function newGame(gameID) {
   });
 }
 
-function handleTwoPlayerGame(userID, originalPlayers, number) {
-  var newPlayers = originalPlayers.slice();
-  newPlayers = newPlayers.map(function (player) {
-    if (player.id !== userID) {
-      return player;
-    }
-
-    var newPlayer = _objectSpread({}, player);
-
-    var scoreForNumber = newPlayer.score[number];
-
-    if (scoreForNumber === 3) {
-      // Update other scores
-      newPlayer.score.total += typeof number === "string" ? 25 : number;
-    } else {
-      newPlayer.score[number] = scoreForNumber + 1;
-    }
-
-    return _objectSpread({}, newPlayer);
-  });
-  return newPlayers;
+function handleTwoPlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
+  // newPlayers = newPlayers.map(player => {
+  //   if (player.id !== userID) {
+  //     return player;
+  //   }
+  //   const newPlayer = { ...player };
+  //   const scoreForNumber = newPlayer.score[number];
+  //   if (scoreForNumber === 3) {
+  //     // Update other scores
+  //     newPlayer.score.total += typeof number === "string" ? 25 : number;
+  //   } else {
+  //     newPlayer.score[number] = scoreForNumber + 1;
+  //   }
+  //   return { ...newPlayer };
+  // });
+  // return newPlayers;
 }
 
-function handleThreePlayerGame(userID, originalPlayers, number) {
-  var newPlayers = originalPlayers.slice();
-  var amAddingToOtherPlayers = newPlayers.some(function (player) {
-    if (player.id === userID && player.score[number] === 3) {
-      return true;
-    }
-  });
-
-  if (amAddingToOtherPlayers) {
-    newPlayers = newPlayers.map(function (player) {
-      var newPlayer = _objectSpread({}, player);
-
-      if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-        newPlayer.score.total += typeof number === "string" ? 25 : number;
-      }
-
-      return _objectSpread({}, newPlayer);
-    });
-  } else {
-    newPlayers = newPlayers.map(function (player) {
-      if (player.id !== userID) {
-        return player;
-      }
-
-      var newPlayer = _objectSpread({}, player);
-
-      var scoreForNumber = newPlayer.score[number];
-      newPlayer.score[number] = scoreForNumber + 1;
-      return _objectSpread({}, newPlayer);
-    });
-  }
-
-  return newPlayers;
+function handleThreePlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
+  // const amAddingToOtherPlayers = newPlayers.some(player => {
+  //   if (player.id === userID && player.score[number] === 3) {
+  //     return true;
+  //   }
+  // });
+  // if (amAddingToOtherPlayers) {
+  //   newPlayers = newPlayers.map(player => {
+  //     const newPlayer = { ...player };
+  //     if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
+  //       newPlayer.score.total += typeof number === "string" ? 25 : number;
+  //     }
+  //     return { ...newPlayer };
+  //   });
+  // } else {
+  //   newPlayers = newPlayers.map(player => {
+  //     if (player.id !== userID) {
+  //       return player;
+  //     }
+  //     const newPlayer = { ...player };
+  //     const scoreForNumber = newPlayer.score[number];
+  //     newPlayer.score[number] = scoreForNumber + 1;
+  //     return { ...newPlayer };
+  //   });
+  // }
+  // return newPlayers;
 }
 
 /***/ }),
@@ -24208,12 +24191,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var next_head__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(next_head__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../effects/user */ "./effects/user.ts");
 /* harmony import */ var _effects_game__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../effects/game */ "./effects/game.ts");
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./style.scss */ "./pages/style.scss");
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_style_scss__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var _types_ts__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../types.ts */ "./types.ts");
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./style.scss */ "./pages/style.scss");
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(_style_scss__WEBPACK_IMPORTED_MODULE_7__);
 
 
 var _jsxFileName = "/Users/sean/Workspace/darts/pages/_app.jsx";
 var __jsx = react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement;
+
 
 
 
@@ -24233,7 +24218,7 @@ function App(_ref) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 11,
+        lineNumber: 12,
         columnNumber: 12
       }
     }, userError.message);
@@ -24247,14 +24232,14 @@ function App(_ref) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 19,
+      lineNumber: 20,
       columnNumber: 5
     }
   }, __jsx(next_head__WEBPACK_IMPORTED_MODULE_3___default.a, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 20,
+      lineNumber: 21,
       columnNumber: 7
     }
   }, __jsx("link", {
@@ -24263,7 +24248,7 @@ function App(_ref) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 21,
+      lineNumber: 22,
       columnNumber: 9
     }
   })), __jsx(Component, Object(_babel_runtime_helpers_esm_extends__WEBPACK_IMPORTED_MODULE_0__["default"])({}, pageProps, {
@@ -24271,7 +24256,7 @@ function App(_ref) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 26,
+      lineNumber: 27,
       columnNumber: 7
     }
   })));
@@ -24337,6 +24322,20 @@ if (true) {
     update();
   });
 }
+
+/***/ }),
+
+/***/ "./types.ts":
+/*!******************!*\
+  !*** ./types.ts ***!
+  \******************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+// https://stackoverflow.com/questions/57132428/augmentations-for-the-global-scope-can-only-be-directly-nested-in-external-modul
+
 
 /***/ }),
 

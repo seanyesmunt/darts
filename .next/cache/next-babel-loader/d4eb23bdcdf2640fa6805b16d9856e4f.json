@@ -1,0 +1,1 @@
+{"ast":null,"code":"var __jsx = React.createElement;\nimport React from \"react\";\nimport Header from \"./header\";\nexport default function Page(props) {\n  return __jsx(\"div\", {\n    className: \"h-full min-h-screen  flex flex-col bg-gray-900\"\n  }, __jsx(Header, null), props.children);\n}","map":null,"metadata":{},"sourceType":"module"}

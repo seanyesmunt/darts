@@ -10,7 +10,9 @@ export default function Setup() {
   const router = useRouter();
   const userID = useGetUserID();
   const { query } = router;
-  const { name } = query;
+  const { name: nameFromQuery } = query;
+  const name =
+    typeof nameFromQuery === "string" ? nameFromQuery : nameFromQuery[0];
 
   React.useEffect(() => {
     if (userID && name) {

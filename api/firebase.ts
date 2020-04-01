@@ -2,44 +2,6 @@ import { v4 as uuidv4 } from "uuid";
 import * as firebase from "firebase/app";
 import "firebase/database";
 
-// DB types
-declare global {
-  interface User {
-    id: string;
-    created_at: number;
-  }
-
-  interface Options {
-    name: string;
-  }
-
-  interface Player {
-    id: string;
-    name: string;
-    score: {
-      15: number;
-      16: number;
-      17: number;
-      18: number;
-      19: number;
-      20: number;
-      bull: number;
-      total: number; // This shouldn't exist, it should just be calculated from the other values, but that's more work
-    };
-  }
-
-  interface Game {
-    id: string;
-    creator_id: string;
-    join_id: string;
-    players: Array<Player>;
-  }
-
-  interface Error {
-    message: string;
-  }
-}
-
 const config = {
   apiKey: "AIzaSyDp01-0TwxRjNC05CuDcpauXRyLSMv0RRw",
   authDomain: "darts-yeslab.firebaseapp.com",
@@ -55,22 +17,35 @@ if (!firebase.apps.length) {
   firebase.initializeApp(config);
 }
 
-const db = firebase.database();
+const database = firebase.database();
 
-const DEFAULT_SCORE = {
-  20: 0,
-  19: 0,
-  18: 0,
-  17: 0,
-  16: 0,
-  15: 0,
-  bull: 0,
-  total: 0
-};
+function db(ref: string) {
+  return database.ref(`/v1/${ref}`);
+}
+
+//
+//
+// User
+//
+//
+function createUser(userID: string): Promise<User> {
+  const user = {
+    created_at: Date.now()
+  };
+
+  return new Promise((resolve, reject) => {
+    db("users/" + userID).set(user, error => {
+      if (error) {
+        reject(error);
+      }
+
+      resolve({ ...user, id: userID });
+    });
+  });
+}
 
 export function getUser(userID: string): Promise<User> {
-  return db
-    .ref("/users/" + userID)
+  return db(`users/${userID}`)
     .once("value")
     .then(function(snapshot) {
       const user = snapshot.val();
@@ -82,19 +57,63 @@ export function getUser(userID: string): Promise<User> {
     });
 }
 
-function createUser(userID): Promise<User> {
-  const user = {
-    created_at: Date.now()
+//
+//
+// Games
+//
+//
+export function createGame(userID: string, name: string): Promise<Game> {
+  const gameID = uuidv4();
+
+  const game: GameLessID = {
+    creator_id: userID,
+    join_id: gameID.slice(0, 4),
+    score_events: [],
+    players: [
+      {
+        id: userID,
+        name
+      }
+    ]
   };
 
   return new Promise((resolve, reject) => {
-    db.ref("users/" + userID).set(user, error => {
+    db(`games/${gameID}`).set(game, error => {
       if (error) {
         reject(error);
+      } else {
+        resolve({ ...game, id: gameID });
       }
-
-      resolve({ ...user, id: userID });
     });
+  });
+}
+
+export function updateGameScore(
+  gameID: string,
+  userID: string,
+  hitValue: number
+) {
+  return new Promise((resolve, reject) => {
+    db(`games/${gameID}`)
+      .once("value")
+      .then(snapshot => {
+        const game = snapshot.val();
+        let newGame: Game = { ...game };
+
+        if (!newGame.score_events) {
+          newGame.score_events = [];
+        }
+
+        newGame.score_events.push({
+          user_id: userID,
+          hit_value: hitValue
+        });
+        db("games/" + gameID).set(newGame, error => {
+          if (error) {
+            console.error("error", error);
+          }
+        });
+      });
   });
 }
 
@@ -104,7 +123,7 @@ export function getGame(
   onUpdate: any
 ): Promise<Game> {
   return new Promise((resolve, reject) => {
-    db.ref("/games/" + gameID).on("value", snapshot => {
+    db(`/games/${gameID}`).on("value", snapshot => {
       const game = snapshot.val();
       onUpdate(game);
     });
@@ -113,7 +132,7 @@ export function getGame(
 
 export function getGameId(join_id: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    db.ref("games")
+    db("games")
       .orderByChild("join_id")
       .equalTo(join_id)
       .on("value", function(snapshot) {
@@ -129,119 +148,58 @@ export function getGameId(join_id: string): Promise<string> {
   });
 }
 
-export function createGame(userID, name): Promise<Game> {
-  const gameID = uuidv4();
-
-  const game = {
-    creator_id: userID,
-    join_id: gameID.slice(0, 4),
-    players: [
-      {
-        id: userID,
-        name,
-        score: DEFAULT_SCORE
-      }
-    ]
-  };
-
-  return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID).set(game, error => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve({ ...game, id: gameID });
-      }
-    });
-  });
-}
-
 export function addPlayerToGame(gameID, userID, name) {
-  return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID)
-      .once("value")
-      .then(snapshot => {
-        const game = snapshot.val();
-
-        if (!game.players.some(player => player.id === userID)) {
-          const newGame = {
-            ...game,
-            players: game.players.concat({
-              id: userID,
-              name,
-              score: DEFAULT_SCORE
-            })
-          };
-
-          db.ref("games/" + gameID).update(newGame, error => {
-            if (error) {
-              console.error("error", error);
-            }
-          });
+  db(`games/${gameID}`)
+    .once("value")
+    .then(snapshot => {
+      const game = snapshot.val();
+      const newGame = {
+        ...game,
+        players: game.players.concat({
+          id: userID,
+          name
+        })
+      };
+      db("games/" + gameID).update(newGame, error => {
+        if (error) {
+          console.error("error", error);
         }
       });
-  });
-}
-
-export function updateScore(gameID, userID, number) {
-  return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID)
-      .once("value")
-      .then(snapshot => {
-        const game = snapshot.val();
-
-        const newGame = { ...game };
-        newGame.players =
-          newGame.players.length > 2
-            ? handleThreePlayerGame(userID, newGame.players, number)
-            : handleTwoPlayerGame(userID, newGame.players, number);
-
-        db.ref("games/" + gameID).set(newGame, error => {
-          if (error) {
-            console.error("error", error);
-          }
-        });
-      });
-  });
+    });
 }
 
 export function resetScore(gameID, userID) {
-  return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID)
-      .once("value")
-      .then(snapshot => {
-        const game = snapshot.val();
-
-        const newGame = { ...game };
-        newGame.players = newGame.players.map(player => {
-          if (player.id !== userID) {
-            return player;
-          }
-
-          return { ...player, score: DEFAULT_SCORE };
-        });
-
-        db.ref("games/" + gameID).set(newGame, error => {
-          if (error) {
-            console.error("error", error);
-          }
-        });
-      });
-  });
+  // return new Promise((resolve, reject) => {
+  //   db(`games/${gameID}`)
+  //     .once("value")
+  //     .then(snapshot => {
+  //       const game = snapshot.val();
+  //       const newGame = { ...game };
+  //       newGame.players = newGame.players.map(player => {
+  //         if (player.id !== userID) {
+  //           return player;
+  //         }
+  //         return { ...player };
+  //       });
+  //       db("games/" + gameID).set(newGame, error => {
+  //         if (error) {
+  //           console.error("error", error);
+  //         }
+  //       });
+  //     });
+  // });
 }
 
 export function newGame(gameID) {
   return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID)
+    db("games/" + gameID)
       .once("value")
       .then(snapshot => {
         const game = snapshot.val();
-
         const newGame = { ...game };
-        newGame.players = newGame.players.map(player => {
-          return { ...player, score: DEFAULT_SCORE };
-        });
+        newGame.score_events = [];
 
-        db.ref("games/" + gameID).set(newGame, error => {
+        db("games/" + gameID).set(newGame, error => {
           if (error) {
             console.error("error", error);
           }
@@ -255,26 +213,22 @@ function handleTwoPlayerGame(
   originalPlayers: Array<Player>,
   number: string | number
 ) {
-  let newPlayers = originalPlayers.slice();
-
-  newPlayers = newPlayers.map(player => {
-    if (player.id !== userID) {
-      return player;
-    }
-
-    const newPlayer = { ...player };
-    const scoreForNumber = newPlayer.score[number];
-    if (scoreForNumber === 3) {
-      // Update other scores
-      newPlayer.score.total += typeof number === "string" ? 25 : number;
-    } else {
-      newPlayer.score[number] = scoreForNumber + 1;
-    }
-
-    return { ...newPlayer };
-  });
-
-  return newPlayers;
+  // let newPlayers = originalPlayers.slice();
+  // newPlayers = newPlayers.map(player => {
+  //   if (player.id !== userID) {
+  //     return player;
+  //   }
+  //   const newPlayer = { ...player };
+  //   const scoreForNumber = newPlayer.score[number];
+  //   if (scoreForNumber === 3) {
+  //     // Update other scores
+  //     newPlayer.score.total += typeof number === "string" ? 25 : number;
+  //   } else {
+  //     newPlayer.score[number] = scoreForNumber + 1;
+  //   }
+  //   return { ...newPlayer };
+  // });
+  // return newPlayers;
 }
 
 function handleThreePlayerGame(
@@ -282,34 +236,30 @@ function handleThreePlayerGame(
   originalPlayers: Array<Player>,
   number: string | number
 ) {
-  let newPlayers = originalPlayers.slice();
-  const amAddingToOtherPlayers = newPlayers.some(player => {
-    if (player.id === userID && player.score[number] === 3) {
-      return true;
-    }
-  });
-
-  if (amAddingToOtherPlayers) {
-    newPlayers = newPlayers.map(player => {
-      const newPlayer = { ...player };
-      if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-        newPlayer.score.total += typeof number === "string" ? 25 : number;
-      }
-      return { ...newPlayer };
-    });
-  } else {
-    newPlayers = newPlayers.map(player => {
-      if (player.id !== userID) {
-        return player;
-      }
-
-      const newPlayer = { ...player };
-      const scoreForNumber = newPlayer.score[number];
-      newPlayer.score[number] = scoreForNumber + 1;
-
-      return { ...newPlayer };
-    });
-  }
-
-  return newPlayers;
+  // let newPlayers = originalPlayers.slice();
+  // const amAddingToOtherPlayers = newPlayers.some(player => {
+  //   if (player.id === userID && player.score[number] === 3) {
+  //     return true;
+  //   }
+  // });
+  // if (amAddingToOtherPlayers) {
+  //   newPlayers = newPlayers.map(player => {
+  //     const newPlayer = { ...player };
+  //     if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
+  //       newPlayer.score.total += typeof number === "string" ? 25 : number;
+  //     }
+  //     return { ...newPlayer };
+  //   });
+  // } else {
+  //   newPlayers = newPlayers.map(player => {
+  //     if (player.id !== userID) {
+  //       return player;
+  //     }
+  //     const newPlayer = { ...player };
+  //     const scoreForNumber = newPlayer.score[number];
+  //     newPlayer.score[number] = scoreForNumber + 1;
+  //     return { ...newPlayer };
+  //   });
+  // }
+  // return newPlayers;
 }

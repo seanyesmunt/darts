@@ -88,7 +88,7 @@ module.exports =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 5);
+/******/ 	return __webpack_require__(__webpack_require__.s = 6);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -97,17 +97,17 @@ module.exports =
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame, updateScore, resetScore, newGame */
+/*! exports provided: getUser, createGame, updateGameScore, getGame, getGameId, addPlayerToGame, resetScore, newGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getUser", function() { return getUser; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createGame", function() { return createGame; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateGameScore", function() { return updateGameScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createGame", function() { return createGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateScore", function() { return updateScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetScore", function() { return resetScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "newGame", function() { return newGame; });
 /* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "uuid");
@@ -124,7 +124,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 
- // DB types
 
 const config = {
   apiKey: "AIzaSyDp01-0TwxRjNC05CuDcpauXRyLSMv0RRw",
@@ -141,37 +140,23 @@ if (!firebase_app__WEBPACK_IMPORTED_MODULE_1__["apps"].length) {
   firebase_app__WEBPACK_IMPORTED_MODULE_1__["initializeApp"](config);
 }
 
-const db = firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"]();
-const DEFAULT_SCORE = {
-  20: 0,
-  19: 0,
-  18: 0,
-  17: 0,
-  16: 0,
-  15: 0,
-  bull: 0,
-  total: 0
-};
-function getUser(userID) {
-  return db.ref("/users/" + userID).once("value").then(function (snapshot) {
-    const user = snapshot.val();
+const database = firebase_app__WEBPACK_IMPORTED_MODULE_1__["database"]();
 
-    if (user) {
-      return _objectSpread({}, user, {
-        id: userID
-      });
-    }
+function db(ref) {
+  return database.ref(`/v1/${ref}`);
+} //
+//
+// User
+//
+//
 
-    return createUser(userID);
-  });
-}
 
 function createUser(userID) {
   const user = {
     created_at: Date.now()
   };
   return new Promise((resolve, reject) => {
-    db.ref("users/" + userID).set(user, error => {
+    db("users/" + userID).set(user, error => {
       if (error) {
         reject(error);
       }
@@ -183,9 +168,73 @@ function createUser(userID) {
   });
 }
 
+function getUser(userID) {
+  return db(`users/${userID}`).once("value").then(function (snapshot) {
+    const user = snapshot.val();
+
+    if (user) {
+      return _objectSpread({}, user, {
+        id: userID
+      });
+    }
+
+    return createUser(userID);
+  });
+} //
+//
+// Games
+//
+//
+
+function createGame(userID, name) {
+  const gameID = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+  const game = {
+    creator_id: userID,
+    join_id: gameID.slice(0, 4),
+    score_events: [],
+    players: [{
+      id: userID,
+      name
+    }]
+  };
+  return new Promise((resolve, reject) => {
+    db(`games/${gameID}`).set(game, error => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(_objectSpread({}, game, {
+          id: gameID
+        }));
+      }
+    });
+  });
+}
+function updateGameScore(gameID, userID, hitValue) {
+  return new Promise((resolve, reject) => {
+    db(`games/${gameID}`).once("value").then(snapshot => {
+      const game = snapshot.val();
+
+      let newGame = _objectSpread({}, game);
+
+      if (!newGame.score_events) {
+        newGame.score_events = [];
+      }
+
+      newGame.score_events.push({
+        user_id: userID,
+        hit_value: hitValue
+      });
+      db("games/" + gameID).set(newGame, error => {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
+}
 function getGame(gameID, userID, onUpdate) {
   return new Promise((resolve, reject) => {
-    db.ref("/games/" + gameID).on("value", snapshot => {
+    db(`/games/${gameID}`).on("value", snapshot => {
       const game = snapshot.val();
       onUpdate(game);
     });
@@ -193,7 +242,7 @@ function getGame(gameID, userID, onUpdate) {
 }
 function getGameId(join_id) {
   return new Promise((resolve, reject) => {
-    db.ref("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
+    db("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
       snapshot.forEach(function (data) {
         const id = data.key;
 
@@ -206,105 +255,53 @@ function getGameId(join_id) {
     });
   });
 }
-function createGame(userID, name) {
-  const gameID = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
-  const game = {
-    creator_id: userID,
-    join_id: gameID.slice(0, 4),
-    players: [{
-      id: userID,
-      name,
-      score: DEFAULT_SCORE
-    }]
-  };
-  return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID).set(game, error => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(_objectSpread({}, game, {
-          id: gameID
-        }));
-      }
-    });
-  });
-}
 function addPlayerToGame(gameID, userID, name) {
-  return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID).once("value").then(snapshot => {
-      const game = snapshot.val();
+  db(`games/${gameID}`).once("value").then(snapshot => {
+    const game = snapshot.val();
 
-      if (!game.players.some(player => player.id === userID)) {
-        const newGame = _objectSpread({}, game, {
-          players: game.players.concat({
-            id: userID,
-            name,
-            score: DEFAULT_SCORE
-          })
-        });
+    const newGame = _objectSpread({}, game, {
+      players: game.players.concat({
+        id: userID,
+        name
+      })
+    });
 
-        db.ref("games/" + gameID).update(newGame, error => {
-          if (error) {
-            console.error("error", error);
-          }
-        });
+    db("games/" + gameID).update(newGame, error => {
+      if (error) {
+        console.error("error", error);
       }
     });
   });
 }
-function updateScore(gameID, userID, number) {
-  return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID).once("value").then(snapshot => {
-      const game = snapshot.val();
-
-      const newGame = _objectSpread({}, game);
-
-      newGame.players = newGame.players.length > 2 ? handleThreePlayerGame(userID, newGame.players, number) : handleTwoPlayerGame(userID, newGame.players, number);
-      db.ref("games/" + gameID).set(newGame, error => {
-        if (error) {
-          console.error("error", error);
-        }
-      });
-    });
-  });
-}
-function resetScore(gameID, userID) {
-  return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID).once("value").then(snapshot => {
-      const game = snapshot.val();
-
-      const newGame = _objectSpread({}, game);
-
-      newGame.players = newGame.players.map(player => {
-        if (player.id !== userID) {
-          return player;
-        }
-
-        return _objectSpread({}, player, {
-          score: DEFAULT_SCORE
-        });
-      });
-      db.ref("games/" + gameID).set(newGame, error => {
-        if (error) {
-          console.error("error", error);
-        }
-      });
-    });
-  });
+function resetScore(gameID, userID) {// return new Promise((resolve, reject) => {
+  //   db(`games/${gameID}`)
+  //     .once("value")
+  //     .then(snapshot => {
+  //       const game = snapshot.val();
+  //       const newGame = { ...game };
+  //       newGame.players = newGame.players.map(player => {
+  //         if (player.id !== userID) {
+  //           return player;
+  //         }
+  //         return { ...player };
+  //       });
+  //       db("games/" + gameID).set(newGame, error => {
+  //         if (error) {
+  //           console.error("error", error);
+  //         }
+  //       });
+  //     });
+  // });
 }
 function newGame(gameID) {
   return new Promise((resolve, reject) => {
-    db.ref("games/" + gameID).once("value").then(snapshot => {
+    db("games/" + gameID).once("value").then(snapshot => {
       const game = snapshot.val();
 
       const newGame = _objectSpread({}, game);
 
-      newGame.players = newGame.players.map(player => {
-        return _objectSpread({}, player, {
-          score: DEFAULT_SCORE
-        });
-      });
-      db.ref("games/" + gameID).set(newGame, error => {
+      newGame.score_events = [];
+      db("games/" + gameID).set(newGame, error => {
         if (error) {
           console.error("error", error);
         }
@@ -313,62 +310,50 @@ function newGame(gameID) {
   });
 }
 
-function handleTwoPlayerGame(userID, originalPlayers, number) {
-  let newPlayers = originalPlayers.slice();
-  newPlayers = newPlayers.map(player => {
-    if (player.id !== userID) {
-      return player;
-    }
-
-    const newPlayer = _objectSpread({}, player);
-
-    const scoreForNumber = newPlayer.score[number];
-
-    if (scoreForNumber === 3) {
-      // Update other scores
-      newPlayer.score.total += typeof number === "string" ? 25 : number;
-    } else {
-      newPlayer.score[number] = scoreForNumber + 1;
-    }
-
-    return _objectSpread({}, newPlayer);
-  });
-  return newPlayers;
+function handleTwoPlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
+  // newPlayers = newPlayers.map(player => {
+  //   if (player.id !== userID) {
+  //     return player;
+  //   }
+  //   const newPlayer = { ...player };
+  //   const scoreForNumber = newPlayer.score[number];
+  //   if (scoreForNumber === 3) {
+  //     // Update other scores
+  //     newPlayer.score.total += typeof number === "string" ? 25 : number;
+  //   } else {
+  //     newPlayer.score[number] = scoreForNumber + 1;
+  //   }
+  //   return { ...newPlayer };
+  // });
+  // return newPlayers;
 }
 
-function handleThreePlayerGame(userID, originalPlayers, number) {
-  let newPlayers = originalPlayers.slice();
-  const amAddingToOtherPlayers = newPlayers.some(player => {
-    if (player.id === userID && player.score[number] === 3) {
-      return true;
-    }
-  });
-
-  if (amAddingToOtherPlayers) {
-    newPlayers = newPlayers.map(player => {
-      const newPlayer = _objectSpread({}, player);
-
-      if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-        newPlayer.score.total += typeof number === "string" ? 25 : number;
-      }
-
-      return _objectSpread({}, newPlayer);
-    });
-  } else {
-    newPlayers = newPlayers.map(player => {
-      if (player.id !== userID) {
-        return player;
-      }
-
-      const newPlayer = _objectSpread({}, player);
-
-      const scoreForNumber = newPlayer.score[number];
-      newPlayer.score[number] = scoreForNumber + 1;
-      return _objectSpread({}, newPlayer);
-    });
-  }
-
-  return newPlayers;
+function handleThreePlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
+  // const amAddingToOtherPlayers = newPlayers.some(player => {
+  //   if (player.id === userID && player.score[number] === 3) {
+  //     return true;
+  //   }
+  // });
+  // if (amAddingToOtherPlayers) {
+  //   newPlayers = newPlayers.map(player => {
+  //     const newPlayer = { ...player };
+  //     if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
+  //       newPlayer.score.total += typeof number === "string" ? 25 : number;
+  //     }
+  //     return { ...newPlayer };
+  //   });
+  // } else {
+  //   newPlayers = newPlayers.map(player => {
+  //     if (player.id !== userID) {
+  //       return player;
+  //     }
+  //     const newPlayer = { ...player };
+  //     const scoreForNumber = newPlayer.score[number];
+  //     newPlayer.score[number] = scoreForNumber + 1;
+  //     return { ...newPlayer };
+  //   });
+  // }
+  // return newPlayers;
 }
 
 /***/ }),
@@ -392,6 +377,13 @@ __webpack_require__.r(__webpack_exports__);
 var _jsxFileName = "/Users/sean/Workspace/darts/component/game.tsx";
 var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
 
 
  // 2 person, closed + highest score
@@ -402,63 +394,110 @@ function Game(props) {
     join_id,
     players,
     id: gameID,
-    creator_id
+    creator_id,
+    score_events: scoreEvents = []
   } = props;
-  const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
-  const highestScore = players.reduce((acc, player) => {
-    if (player.score.total > acc) {
-      return player.score.total;
-    } else {
-      return acc;
+  const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])(); // Initialize score object based on how many players there are
+
+  let score = players.reduce((scoreObject, player) => {
+    return _objectSpread({}, scoreObject, {
+      [player.id]: {
+        20: 0,
+        19: 0,
+        15: 0,
+        18: 0,
+        17: 0,
+        16: 0,
+        25: 0,
+        total: 0
+      }
+    });
+  }, {}); // For each `score_event`, update the score for everyone
+
+  scoreEvents.forEach(scoreEvent => {
+    if (!userID) {
+      return;
     }
-  }, 0);
-  const lowestScore = players.reduce((acc, player) => {
-    if (player.score.total < acc) {
-      return player.score.total;
+
+    const {
+      user_id: scoreEventUserID,
+      hit_value: hitValue
+    } = scoreEvent;
+    const usersScoreForHitValue = score[scoreEventUserID][hitValue];
+
+    if (usersScoreForHitValue < 3) {
+      score[scoreEventUserID][hitValue] += 1;
     } else {
-      return acc;
+      if (players.length > 2) {
+        // Add score to other players that don't have hitValue closed out
+        players.forEach(player => {
+          const wasMyHit = player.id === scoreEventUserID;
+
+          if (wasMyHit) {
+            score[player.id] += hitValue;
+          }
+        });
+      } else {
+        // Add score to my score if players that don't have hitValue closed out
+        players.forEach(player => {
+          const isOtherPlayer = player.id !== scoreEventUserID;
+          const playersScoreForHitValue = score[player.id][hitValue];
+
+          if (isOtherPlayer && playersScoreForHitValue < 3) {
+            score[userID].total += hitValue;
+          }
+        });
+      }
     }
-  }, Infinity);
+  });
+  const [highestScore, lowestScore] = Object.values(score).reduce((acc, score) => {
+    const [currentHighest, currentLowest] = acc;
+    let newHighest;
+    let newLowest;
+
+    if (score.total > currentHighest) {
+      newHighest = score.total;
+    }
+
+    if (score.total < currentLowest) {
+      newLowest = score.total;
+    }
+
+    return [newHighest !== undefined ? currentHighest : 0, newLowest !== undefined ? newLowest : currentLowest];
+  }, [0, Infinity]);
   const creator = players.find(player => player.id === creator_id);
   let hasWinner = false;
   let winnerName;
+  Object.keys(score).forEach(userID => {
+    const scoreForUserID = score[userID];
+    const hasClosedOutBoard = scoreForUserID[15] === 3 && scoreForUserID[16] === 3 && scoreForUserID[17] === 3 && scoreForUserID[18] === 3 && scoreForUserID[19] === 3 && scoreForUserID[20] === 3 && scoreForUserID[25] === 3;
 
-  for (var i = 0; i < players.length; i++) {
-    const player = players[i];
-    const scores = player.score;
-    const total = scores[15] + scores[16] + scores[17] + scores[18] + scores[19] + scores[20] + scores["bull"];
+    if (hasClosedOutBoard) {
+      if (players.length < 3) {
+        const isHightest = scoreForUserID.total === highestScore;
 
-    if (total === 21) {
-      if (players.length > 2) {
-        // Does player have the lowest score?
-        const isLowest = players.some(player => {
-          return player.score.total === lowestScore;
-        });
-
-        if (isLowest) {
+        if (isHightest) {
           hasWinner = true;
+          const player = players.find(player => player.id === userID);
           winnerName = player.name;
         }
       } else {
-        // Does player have the highest score?
-        const isHighest = players.some(player => {
-          return player.score.total === highestScore;
-        });
+        const isLowest = scoreForUserID.total === lowestScore;
 
-        if (isHighest) {
+        if (isLowest) {
           hasWinner = true;
+          const player = players.find(player => player.id === userID);
           winnerName = player.name;
         }
       }
     }
-  }
-
+  });
   return hasWinner ? __jsx("div", {
     className: "mx-auto",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 70,
+      lineNumber: 128,
       columnNumber: 5
     }
   }, __jsx("img", {
@@ -467,7 +506,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 71,
+      lineNumber: 129,
       columnNumber: 7
     }
   }), __jsx("h1", {
@@ -475,7 +514,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 72,
+      lineNumber: 130,
       columnNumber: 7
     }
   }, "Nice one ", winnerName, "!"), __jsx("div", {
@@ -483,7 +522,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 74,
+      lineNumber: 132,
       columnNumber: 7
     }
   }, creator && creator.id === userID ? __jsx("button", {
@@ -492,7 +531,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 76,
+      lineNumber: 134,
       columnNumber: 11
     }
   }, "New Game") : __jsx("div", {
@@ -500,7 +539,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 83,
+      lineNumber: 141,
       columnNumber: 11
     }
   }, "Waiting for the host to start the another game..."))) : __jsx("div", {
@@ -508,16 +547,17 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 90,
+      lineNumber: 148,
       columnNumber: 5
     }
   }, __jsx(ScoreBoard, {
-    players: players,
+    score: score,
     gameID: gameID,
+    players: players,
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 91,
+      lineNumber: 149,
       columnNumber: 7
     }
   }), __jsx("button", {
@@ -526,7 +566,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 92,
+      lineNumber: 150,
       columnNumber: 7
     }
   }, "Reset Score"));
@@ -535,7 +575,8 @@ function Game(props) {
 function ScoreBoard(props) {
   const {
     players,
-    gameID
+    gameID,
+    score
   } = props;
   const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
   return __jsx("div", {
@@ -543,7 +584,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 107,
+      lineNumber: 165,
       columnNumber: 5
     }
   }, __jsx("div", {
@@ -551,7 +592,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 108,
+      lineNumber: 166,
       columnNumber: 7
     }
   }, __jsx("div", {
@@ -559,7 +600,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 109,
+      lineNumber: 167,
       columnNumber: 9
     }
   }, __jsx("div", {
@@ -567,40 +608,38 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 110,
+      lineNumber: 168,
       columnNumber: 11
     }
-  }, ["", 20, 19, 18, 17, 16, 15, "bull"].map((value, index) => {
+  }, ["", 20, 19, 18, 17, 16, 15, 25].map((value, index) => {
     return __jsx("div", {
       key: value,
       className: `score__item h-16 ${index === 0 ? "h-24" : ""} md:h-24 px-4 flex items-center justify-center`,
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 113,
+        lineNumber: 171,
         columnNumber: 17
       }
     }, __jsx("span", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 119,
+        lineNumber: 177,
         columnNumber: 19
       }
     }, value));
-  })), players.map(({
-    id,
-    name,
-    score
-  }) => {
-    const isMine = id === userID;
+  })), Object.keys(score).map(userIDForScore => {
+    const player = players.find(player => player.id === userIDForScore);
+    const userScore = score[userIDForScore];
+    const isMine = userIDForScore === userID;
     return __jsx("div", {
-      key: id,
+      key: userIDForScore,
       className: "score__column",
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 127,
+        lineNumber: 187,
         columnNumber: 15
       }
     }, __jsx("div", {
@@ -610,7 +649,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 128,
+        lineNumber: 188,
         columnNumber: 17
       }
     }, __jsx("div", {
@@ -618,28 +657,28 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 136,
+        lineNumber: 196,
         columnNumber: 19
       }
-    }, name), __jsx("div", {
+    }, player.name), __jsx("div", {
       className: "text-4xl",
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 137,
+        lineNumber: 199,
         columnNumber: 19
       }
-    }, score.total)), [20, 19, 18, 17, 16, 15, "bull"].map(number => {
+    }, userScore.total)), [20, 19, 18, 17, 16, 15, 25].map(number => {
       return __jsx(ScoreRow, {
         key: number,
         number: number,
-        score: score[number],
-        playerID: id,
+        score: score[userIDForScore][number],
+        playerID: userIDForScore,
         gameID: gameID,
         __self: this,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 141,
+          lineNumber: 203,
           columnNumber: 21
         }
       });
@@ -657,8 +696,8 @@ function ScoreRow(props) {
   const userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
   const isMine = playerID === userID;
 
-  function handleUpdateScore() {
-    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["updateScore"])(gameID, userID, number);
+  function handleupdateGameScore() {
+    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["updateGameScore"])(gameID, userID, number);
   }
 
   return __jsx("div", {
@@ -666,26 +705,26 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 169,
+      lineNumber: 231,
       columnNumber: 5
     }
   }, __jsx("button", {
     disabled: !isMine,
-    onClick: () => handleUpdateScore(),
+    onClick: () => handleupdateGameScore(),
     className: classnames__WEBPACK_IMPORTED_MODULE_1___default()("flex-1 flex align-center justify-center text-white ont-bold w-100", {
       "bg-teal-700 hover:bg-teal-500": isMine
     }),
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 170,
+      lineNumber: 232,
       columnNumber: 7
     }
   }, score === 1 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 181,
+      lineNumber: 243,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -696,14 +735,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 182,
+      lineNumber: 244,
       columnNumber: 13
     }
   })), score === 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 186,
+      lineNumber: 248,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -714,7 +753,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 187,
+      lineNumber: 249,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -725,14 +764,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 188,
+      lineNumber: 250,
       columnNumber: 13
     }
-  })), score === 3 && __jsx(SVG, {
+  })), score > 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 192,
+      lineNumber: 254,
       columnNumber: 11
     }
   }, __jsx("circle", {
@@ -742,7 +781,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 193,
+      lineNumber: 255,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -753,7 +792,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 194,
+      lineNumber: 256,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -764,7 +803,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 195,
+      lineNumber: 257,
       columnNumber: 13
     }
   }))));
@@ -784,7 +823,7 @@ function SVG(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 205,
+      lineNumber: 267,
       columnNumber: 5
     }
   }, props.children);
@@ -2826,7 +2865,7 @@ function GamePage(props) {
 
 /***/ }),
 
-/***/ 5:
+/***/ 6:
 /*!***********************************!*\
   !*** multi ./pages/game/[id].tsx ***!
   \***********************************/

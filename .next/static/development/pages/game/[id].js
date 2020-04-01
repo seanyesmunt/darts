@@ -4,17 +4,17 @@
 /*!*************************!*\
   !*** ./api/firebase.ts ***!
   \*************************/
-/*! exports provided: getUser, getGame, getGameId, createGame, addPlayerToGame, updateScore, resetScore, newGame */
+/*! exports provided: getUser, createGame, updateGameScore, getGame, getGameId, addPlayerToGame, resetScore, newGame */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getUser", function() { return getUser; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createGame", function() { return createGame; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateGameScore", function() { return updateGameScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGame", function() { return getGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getGameId", function() { return getGameId; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createGame", function() { return createGame; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "addPlayerToGame", function() { return addPlayerToGame; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateScore", function() { return updateScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetScore", function() { return resetScore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "newGame", function() { return newGame; });
 /* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
@@ -30,7 +30,6 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 
 
- // DB types
 
 var config = {
   apiKey: "AIzaSyDp01-0TwxRjNC05CuDcpauXRyLSMv0RRw",
@@ -47,37 +46,23 @@ if (!firebase_app__WEBPACK_IMPORTED_MODULE_2__["apps"].length) {
   firebase_app__WEBPACK_IMPORTED_MODULE_2__["initializeApp"](config);
 }
 
-var db = firebase_app__WEBPACK_IMPORTED_MODULE_2__["database"]();
-var DEFAULT_SCORE = {
-  20: 0,
-  19: 0,
-  18: 0,
-  17: 0,
-  16: 0,
-  15: 0,
-  bull: 0,
-  total: 0
-};
-function getUser(userID) {
-  return db.ref("/users/" + userID).once("value").then(function (snapshot) {
-    var user = snapshot.val();
+var database = firebase_app__WEBPACK_IMPORTED_MODULE_2__["database"]();
 
-    if (user) {
-      return _objectSpread({}, user, {
-        id: userID
-      });
-    }
+function db(ref) {
+  return database.ref("/v1/".concat(ref));
+} //
+//
+// User
+//
+//
 
-    return createUser(userID);
-  });
-}
 
 function createUser(userID) {
   var user = {
     created_at: Date.now()
   };
   return new Promise(function (resolve, reject) {
-    db.ref("users/" + userID).set(user, function (error) {
+    db("users/" + userID).set(user, function (error) {
       if (error) {
         reject(error);
       }
@@ -89,9 +74,73 @@ function createUser(userID) {
   });
 }
 
+function getUser(userID) {
+  return db("users/".concat(userID)).once("value").then(function (snapshot) {
+    var user = snapshot.val();
+
+    if (user) {
+      return _objectSpread({}, user, {
+        id: userID
+      });
+    }
+
+    return createUser(userID);
+  });
+} //
+//
+// Games
+//
+//
+
+function createGame(userID, name) {
+  var gameID = Object(uuid__WEBPACK_IMPORTED_MODULE_1__["v4"])();
+  var game = {
+    creator_id: userID,
+    join_id: gameID.slice(0, 4),
+    score_events: [],
+    players: [{
+      id: userID,
+      name: name
+    }]
+  };
+  return new Promise(function (resolve, reject) {
+    db("games/".concat(gameID)).set(game, function (error) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(_objectSpread({}, game, {
+          id: gameID
+        }));
+      }
+    });
+  });
+}
+function updateGameScore(gameID, userID, hitValue) {
+  return new Promise(function (resolve, reject) {
+    db("games/".concat(gameID)).once("value").then(function (snapshot) {
+      var game = snapshot.val();
+
+      var newGame = _objectSpread({}, game);
+
+      if (!newGame.score_events) {
+        newGame.score_events = [];
+      }
+
+      newGame.score_events.push({
+        user_id: userID,
+        hit_value: hitValue
+      });
+      db("games/" + gameID).set(newGame, function (error) {
+        if (error) {
+          console.error("error", error);
+        }
+      });
+    });
+  });
+}
 function getGame(gameID, userID, onUpdate) {
   return new Promise(function (resolve, reject) {
-    db.ref("/games/" + gameID).on("value", function (snapshot) {
+    db("/games/".concat(gameID)).on("value", function (snapshot) {
       var game = snapshot.val();
       onUpdate(game);
     });
@@ -99,7 +148,7 @@ function getGame(gameID, userID, onUpdate) {
 }
 function getGameId(join_id) {
   return new Promise(function (resolve, reject) {
-    db.ref("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
+    db("games").orderByChild("join_id").equalTo(join_id).on("value", function (snapshot) {
       snapshot.forEach(function (data) {
         var id = data.key;
 
@@ -112,107 +161,53 @@ function getGameId(join_id) {
     });
   });
 }
-function createGame(userID, name) {
-  var gameID = Object(uuid__WEBPACK_IMPORTED_MODULE_1__["v4"])();
-  var game = {
-    creator_id: userID,
-    join_id: gameID.slice(0, 4),
-    players: [{
-      id: userID,
-      name: name,
-      score: DEFAULT_SCORE
-    }]
-  };
-  return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).set(game, function (error) {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(_objectSpread({}, game, {
-          id: gameID
-        }));
-      }
-    });
-  });
-}
 function addPlayerToGame(gameID, userID, name) {
-  return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).once("value").then(function (snapshot) {
-      var game = snapshot.val();
+  db("games/".concat(gameID)).once("value").then(function (snapshot) {
+    var game = snapshot.val();
 
-      if (!game.players.some(function (player) {
-        return player.id === userID;
-      })) {
-        var _newGame = _objectSpread({}, game, {
-          players: game.players.concat({
-            id: userID,
-            name: name,
-            score: DEFAULT_SCORE
-          })
-        });
+    var newGame = _objectSpread({}, game, {
+      players: game.players.concat({
+        id: userID,
+        name: name
+      })
+    });
 
-        db.ref("games/" + gameID).update(_newGame, function (error) {
-          if (error) {
-            console.error("error", error);
-          }
-        });
+    db("games/" + gameID).update(newGame, function (error) {
+      if (error) {
+        console.error("error", error);
       }
     });
   });
 }
-function updateScore(gameID, userID, number) {
-  return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).once("value").then(function (snapshot) {
-      var game = snapshot.val();
-
-      var newGame = _objectSpread({}, game);
-
-      newGame.players = newGame.players.length > 2 ? handleThreePlayerGame(userID, newGame.players, number) : handleTwoPlayerGame(userID, newGame.players, number);
-      db.ref("games/" + gameID).set(newGame, function (error) {
-        if (error) {
-          console.error("error", error);
-        }
-      });
-    });
-  });
-}
-function resetScore(gameID, userID) {
-  return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).once("value").then(function (snapshot) {
-      var game = snapshot.val();
-
-      var newGame = _objectSpread({}, game);
-
-      newGame.players = newGame.players.map(function (player) {
-        if (player.id !== userID) {
-          return player;
-        }
-
-        return _objectSpread({}, player, {
-          score: DEFAULT_SCORE
-        });
-      });
-      db.ref("games/" + gameID).set(newGame, function (error) {
-        if (error) {
-          console.error("error", error);
-        }
-      });
-    });
-  });
+function resetScore(gameID, userID) {// return new Promise((resolve, reject) => {
+  //   db(`games/${gameID}`)
+  //     .once("value")
+  //     .then(snapshot => {
+  //       const game = snapshot.val();
+  //       const newGame = { ...game };
+  //       newGame.players = newGame.players.map(player => {
+  //         if (player.id !== userID) {
+  //           return player;
+  //         }
+  //         return { ...player };
+  //       });
+  //       db("games/" + gameID).set(newGame, error => {
+  //         if (error) {
+  //           console.error("error", error);
+  //         }
+  //       });
+  //     });
+  // });
 }
 function newGame(gameID) {
   return new Promise(function (resolve, reject) {
-    db.ref("games/" + gameID).once("value").then(function (snapshot) {
+    db("games/" + gameID).once("value").then(function (snapshot) {
       var game = snapshot.val();
 
       var newGame = _objectSpread({}, game);
 
-      newGame.players = newGame.players.map(function (player) {
-        return _objectSpread({}, player, {
-          score: DEFAULT_SCORE
-        });
-      });
-      db.ref("games/" + gameID).set(newGame, function (error) {
+      newGame.score_events = [];
+      db("games/" + gameID).set(newGame, function (error) {
         if (error) {
           console.error("error", error);
         }
@@ -221,62 +216,50 @@ function newGame(gameID) {
   });
 }
 
-function handleTwoPlayerGame(userID, originalPlayers, number) {
-  var newPlayers = originalPlayers.slice();
-  newPlayers = newPlayers.map(function (player) {
-    if (player.id !== userID) {
-      return player;
-    }
-
-    var newPlayer = _objectSpread({}, player);
-
-    var scoreForNumber = newPlayer.score[number];
-
-    if (scoreForNumber === 3) {
-      // Update other scores
-      newPlayer.score.total += typeof number === "string" ? 25 : number;
-    } else {
-      newPlayer.score[number] = scoreForNumber + 1;
-    }
-
-    return _objectSpread({}, newPlayer);
-  });
-  return newPlayers;
+function handleTwoPlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
+  // newPlayers = newPlayers.map(player => {
+  //   if (player.id !== userID) {
+  //     return player;
+  //   }
+  //   const newPlayer = { ...player };
+  //   const scoreForNumber = newPlayer.score[number];
+  //   if (scoreForNumber === 3) {
+  //     // Update other scores
+  //     newPlayer.score.total += typeof number === "string" ? 25 : number;
+  //   } else {
+  //     newPlayer.score[number] = scoreForNumber + 1;
+  //   }
+  //   return { ...newPlayer };
+  // });
+  // return newPlayers;
 }
 
-function handleThreePlayerGame(userID, originalPlayers, number) {
-  var newPlayers = originalPlayers.slice();
-  var amAddingToOtherPlayers = newPlayers.some(function (player) {
-    if (player.id === userID && player.score[number] === 3) {
-      return true;
-    }
-  });
-
-  if (amAddingToOtherPlayers) {
-    newPlayers = newPlayers.map(function (player) {
-      var newPlayer = _objectSpread({}, player);
-
-      if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
-        newPlayer.score.total += typeof number === "string" ? 25 : number;
-      }
-
-      return _objectSpread({}, newPlayer);
-    });
-  } else {
-    newPlayers = newPlayers.map(function (player) {
-      if (player.id !== userID) {
-        return player;
-      }
-
-      var newPlayer = _objectSpread({}, player);
-
-      var scoreForNumber = newPlayer.score[number];
-      newPlayer.score[number] = scoreForNumber + 1;
-      return _objectSpread({}, newPlayer);
-    });
-  }
-
-  return newPlayers;
+function handleThreePlayerGame(userID, originalPlayers, number) {// let newPlayers = originalPlayers.slice();
+  // const amAddingToOtherPlayers = newPlayers.some(player => {
+  //   if (player.id === userID && player.score[number] === 3) {
+  //     return true;
+  //   }
+  // });
+  // if (amAddingToOtherPlayers) {
+  //   newPlayers = newPlayers.map(player => {
+  //     const newPlayer = { ...player };
+  //     if (newPlayer.score[number] !== 3 && newPlayer.id !== userID) {
+  //       newPlayer.score.total += typeof number === "string" ? 25 : number;
+  //     }
+  //     return { ...newPlayer };
+  //   });
+  // } else {
+  //   newPlayers = newPlayers.map(player => {
+  //     if (player.id !== userID) {
+  //       return player;
+  //     }
+  //     const newPlayer = { ...player };
+  //     const scoreForNumber = newPlayer.score[number];
+  //     newPlayer.score[number] = scoreForNumber + 1;
+  //     return { ...newPlayer };
+  //   });
+  // }
+  // return newPlayers;
 }
 
 /***/ }),
@@ -291,14 +274,23 @@ function handleThreePlayerGame(userID, originalPlayers, number) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Game; });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! classnames */ "./node_modules/classnames/index.js");
-/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../effects/user */ "./effects/user.ts");
-/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+/* harmony import */ var _babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
+/* harmony import */ var _babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/esm/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! classnames */ "./node_modules/classnames/index.js");
+/* harmony import */ var classnames__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(classnames__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _effects_user__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../effects/user */ "./effects/user.ts");
+/* harmony import */ var _api_firebase__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../api/firebase */ "./api/firebase.ts");
+
+
 var _jsxFileName = "/Users/sean/Workspace/darts/component/game.tsx";
-var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
+var __jsx = react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement;
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { Object(_babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
 
 
 
@@ -309,64 +301,122 @@ function Game(props) {
   var join_id = props.join_id,
       players = props.players,
       gameID = props.id,
-      creator_id = props.creator_id;
-  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
-  var highestScore = players.reduce(function (acc, player) {
-    if (player.score.total > acc) {
-      return player.score.total;
-    } else {
-      return acc;
+      creator_id = props.creator_id,
+      _props$score_events = props.score_events,
+      scoreEvents = _props$score_events === void 0 ? [] : _props$score_events;
+  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])(); // Initialize score object based on how many players there are
+
+  var score = players.reduce(function (scoreObject, player) {
+    return _objectSpread({}, scoreObject, Object(_babel_runtime_helpers_esm_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, player.id, {
+      20: 0,
+      19: 0,
+      15: 0,
+      18: 0,
+      17: 0,
+      16: 0,
+      25: 0,
+      total: 0
+    }));
+  }, {}); // For each `score_event`, update the score for everyone
+
+  scoreEvents.forEach(function (scoreEvent) {
+    if (!userID) {
+      return;
     }
-  }, 0);
-  var lowestScore = players.reduce(function (acc, player) {
-    if (player.score.total < acc) {
-      return player.score.total;
+
+    var scoreEventUserID = scoreEvent.user_id,
+        hitValue = scoreEvent.hit_value;
+    var usersScoreForHitValue = score[scoreEventUserID][hitValue];
+
+    if (usersScoreForHitValue < 3) {
+      score[scoreEventUserID][hitValue] += 1;
     } else {
-      return acc;
+      if (players.length > 2) {
+        // Add score to other players that don't have hitValue closed out
+        players.forEach(function (player) {
+          var wasMyHit = player.id === scoreEventUserID;
+
+          if (wasMyHit) {
+            score[player.id] += hitValue;
+          }
+        });
+      } else {
+        // Add score to my score if players that don't have hitValue closed out
+        players.forEach(function (player) {
+          var isOtherPlayer = player.id !== scoreEventUserID;
+          var playersScoreForHitValue = score[player.id][hitValue];
+
+          if (isOtherPlayer && playersScoreForHitValue < 3) {
+            score[userID].total += hitValue;
+          }
+        });
+      }
     }
-  }, Infinity);
+  });
+
+  var _Object$values$reduce = Object.values(score).reduce(function (acc, score) {
+    var _acc = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(acc, 2),
+        currentHighest = _acc[0],
+        currentLowest = _acc[1];
+
+    var newHighest;
+    var newLowest;
+
+    if (score.total > currentHighest) {
+      newHighest = score.total;
+    }
+
+    if (score.total < currentLowest) {
+      newLowest = score.total;
+    }
+
+    return [newHighest !== undefined ? currentHighest : 0, newLowest !== undefined ? newLowest : currentLowest];
+  }, [0, Infinity]),
+      _Object$values$reduce2 = Object(_babel_runtime_helpers_esm_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_Object$values$reduce, 2),
+      highestScore = _Object$values$reduce2[0],
+      lowestScore = _Object$values$reduce2[1];
+
   var creator = players.find(function (player) {
     return player.id === creator_id;
   });
   var hasWinner = false;
   var winnerName;
+  Object.keys(score).forEach(function (userID) {
+    var scoreForUserID = score[userID];
+    var hasClosedOutBoard = scoreForUserID[15] === 3 && scoreForUserID[16] === 3 && scoreForUserID[17] === 3 && scoreForUserID[18] === 3 && scoreForUserID[19] === 3 && scoreForUserID[20] === 3 && scoreForUserID[25] === 3;
 
-  for (var i = 0; i < players.length; i++) {
-    var player = players[i];
-    var scores = player.score;
-    var total = scores[15] + scores[16] + scores[17] + scores[18] + scores[19] + scores[20] + scores["bull"];
+    if (hasClosedOutBoard) {
+      if (players.length < 3) {
+        var isHightest = scoreForUserID.total === highestScore;
 
-    if (total === 21) {
-      if (players.length > 2) {
-        // Does player have the lowest score?
-        var isLowest = players.some(function (player) {
-          return player.score.total === lowestScore;
-        });
-
-        if (isLowest) {
+        if (isHightest) {
           hasWinner = true;
+          var player = players.find(function (player) {
+            return player.id === userID;
+          });
           winnerName = player.name;
         }
       } else {
-        // Does player have the highest score?
-        var isHighest = players.some(function (player) {
-          return player.score.total === highestScore;
-        });
+        var isLowest = scoreForUserID.total === lowestScore;
 
-        if (isHighest) {
+        if (isLowest) {
           hasWinner = true;
-          winnerName = player.name;
+
+          var _player = players.find(function (player) {
+            return player.id === userID;
+          });
+
+          winnerName = _player.name;
         }
       }
     }
-  }
-
+  });
   return hasWinner ? __jsx("div", {
     className: "mx-auto",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 70,
+      lineNumber: 128,
       columnNumber: 5
     }
   }, __jsx("img", {
@@ -375,7 +425,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 71,
+      lineNumber: 129,
       columnNumber: 7
     }
   }), __jsx("h1", {
@@ -383,7 +433,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 72,
+      lineNumber: 130,
       columnNumber: 7
     }
   }, "Nice one ", winnerName, "!"), __jsx("div", {
@@ -391,18 +441,18 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 74,
+      lineNumber: 132,
       columnNumber: 7
     }
   }, creator && creator.id === userID ? __jsx("button", {
     className: "mt-4 md:mt-24 w-full md:w-auto text-2xl bg-teal-500 hover:bg-teal-700 text-white py-2 px-4 rounded-lg shadow",
     onClick: function onClick() {
-      return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["newGame"])(gameID);
+      return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_5__["newGame"])(gameID);
     },
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 76,
+      lineNumber: 134,
       columnNumber: 11
     }
   }, "New Game") : __jsx("div", {
@@ -410,7 +460,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 83,
+      lineNumber: 141,
       columnNumber: 11
     }
   }, "Waiting for the host to start the another game..."))) : __jsx("div", {
@@ -418,27 +468,28 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 90,
+      lineNumber: 148,
       columnNumber: 5
     }
   }, __jsx(ScoreBoard, {
-    players: players,
+    score: score,
     gameID: gameID,
+    players: players,
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 91,
+      lineNumber: 149,
       columnNumber: 7
     }
   }), __jsx("button", {
     className: "mt-24 mb-4 md:w-auto text-2xl bg-gray-800 hover:bg-teal-700 text-white py-2 px-4 text-xs rounded-lg shadow",
     onClick: function onClick() {
-      return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["resetScore"])(gameID, userID);
+      return Object(_api_firebase__WEBPACK_IMPORTED_MODULE_5__["resetScore"])(gameID, userID);
     },
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 92,
+      lineNumber: 150,
       columnNumber: 7
     }
   }, "Reset Score"));
@@ -448,14 +499,15 @@ function ScoreBoard(props) {
   var _this = this;
 
   var players = props.players,
-      gameID = props.gameID;
-  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
+      gameID = props.gameID,
+      score = props.score;
+  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])();
   return __jsx("div", {
     className: "mt-4 md:mt-8 text-sm md:text-2xl bg-teal-800 rounded-lg chalk",
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 107,
+      lineNumber: 165,
       columnNumber: 5
     }
   }, __jsx("div", {
@@ -463,7 +515,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 108,
+      lineNumber: 166,
       columnNumber: 7
     }
   }, __jsx("div", {
@@ -471,7 +523,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 109,
+      lineNumber: 167,
       columnNumber: 9
     }
   }, __jsx("div", {
@@ -479,49 +531,50 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 110,
+      lineNumber: 168,
       columnNumber: 11
     }
-  }, ["", 20, 19, 18, 17, 16, 15, "bull"].map(function (value, index) {
+  }, ["", 20, 19, 18, 17, 16, 15, 25].map(function (value, index) {
     return __jsx("div", {
       key: value,
       className: "score__item h-16 ".concat(index === 0 ? "h-24" : "", " md:h-24 px-4 flex items-center justify-center"),
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 113,
+        lineNumber: 171,
         columnNumber: 17
       }
     }, __jsx("span", {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 119,
+        lineNumber: 177,
         columnNumber: 19
       }
     }, value));
-  })), players.map(function (_ref) {
-    var id = _ref.id,
-        name = _ref.name,
-        score = _ref.score;
-    var isMine = id === userID;
+  })), Object.keys(score).map(function (userIDForScore) {
+    var player = players.find(function (player) {
+      return player.id === userIDForScore;
+    });
+    var userScore = score[userIDForScore];
+    var isMine = userIDForScore === userID;
     return __jsx("div", {
-      key: id,
+      key: userIDForScore,
       className: "score__column",
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 127,
+        lineNumber: 187,
         columnNumber: 15
       }
     }, __jsx("div", {
-      className: classnames__WEBPACK_IMPORTED_MODULE_1___default()("score__item h-24 md:h-24 w-24 text-center pt-2 ", {
+      className: classnames__WEBPACK_IMPORTED_MODULE_3___default()("score__item h-24 md:h-24 w-24 text-center pt-2 ", {
         "bg-teal-700": isMine
       }),
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 128,
+        lineNumber: 188,
         columnNumber: 17
       }
     }, __jsx("div", {
@@ -529,28 +582,28 @@ function ScoreBoard(props) {
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 136,
+        lineNumber: 196,
         columnNumber: 19
       }
-    }, name), __jsx("div", {
+    }, player.name), __jsx("div", {
       className: "text-4xl",
       __self: _this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 137,
+        lineNumber: 199,
         columnNumber: 19
       }
-    }, score.total)), [20, 19, 18, 17, 16, 15, "bull"].map(function (number) {
+    }, userScore.total)), [20, 19, 18, 17, 16, 15, 25].map(function (number) {
       return __jsx(ScoreRow, {
         key: number,
         number: number,
-        score: score[number],
-        playerID: id,
+        score: score[userIDForScore][number],
+        playerID: userIDForScore,
         gameID: gameID,
         __self: _this,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 141,
+          lineNumber: 203,
           columnNumber: 21
         }
       });
@@ -563,11 +616,11 @@ function ScoreRow(props) {
       score = props.score,
       gameID = props.gameID,
       playerID = props.playerID;
-  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_2__["useGetUserID"])();
+  var userID = Object(_effects_user__WEBPACK_IMPORTED_MODULE_4__["useGetUserID"])();
   var isMine = playerID === userID;
 
-  function handleUpdateScore() {
-    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_3__["updateScore"])(gameID, userID, number);
+  function handleupdateGameScore() {
+    Object(_api_firebase__WEBPACK_IMPORTED_MODULE_5__["updateGameScore"])(gameID, userID, number);
   }
 
   return __jsx("div", {
@@ -575,28 +628,28 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 169,
+      lineNumber: 231,
       columnNumber: 5
     }
   }, __jsx("button", {
     disabled: !isMine,
     onClick: function onClick() {
-      return handleUpdateScore();
+      return handleupdateGameScore();
     },
-    className: classnames__WEBPACK_IMPORTED_MODULE_1___default()("flex-1 flex align-center justify-center text-white ont-bold w-100", {
+    className: classnames__WEBPACK_IMPORTED_MODULE_3___default()("flex-1 flex align-center justify-center text-white ont-bold w-100", {
       "bg-teal-700 hover:bg-teal-500": isMine
     }),
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 170,
+      lineNumber: 232,
       columnNumber: 7
     }
   }, score === 1 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 181,
+      lineNumber: 243,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -607,14 +660,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 182,
+      lineNumber: 244,
       columnNumber: 13
     }
   })), score === 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 186,
+      lineNumber: 248,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -625,7 +678,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 187,
+      lineNumber: 249,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -636,14 +689,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 188,
+      lineNumber: 250,
       columnNumber: 13
     }
-  })), score === 3 && __jsx(SVG, {
+  })), score > 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 192,
+      lineNumber: 254,
       columnNumber: 11
     }
   }, __jsx("circle", {
@@ -653,7 +706,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 193,
+      lineNumber: 255,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -664,7 +717,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 194,
+      lineNumber: 256,
       columnNumber: 13
     }
   }), __jsx("line", {
@@ -675,7 +728,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 195,
+      lineNumber: 257,
       columnNumber: 13
     }
   }))));
@@ -695,7 +748,7 @@ function SVG(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 205,
+      lineNumber: 267,
       columnNumber: 5
     }
   }, props.children);
@@ -25496,7 +25549,7 @@ function GamePage(props) {
 
 /***/ }),
 
-/***/ 3:
+/***/ 4:
 /*!*************************************************************************************************************************************************!*\
   !*** multi next-client-pages-loader?page=%2Fgame%2F%5Bid%5D&absolutePagePath=%2FUsers%2Fsean%2FWorkspace%2Fdarts%2Fpages%2Fgame%2F%5Bid%5D.tsx ***!
   \*************************************************************************************************************************************************/
@@ -25519,5 +25572,5 @@ module.exports = dll_2adc2403d89adc16ead0;
 
 /***/ })
 
-},[[3,"static/runtime/webpack.js"]]]);
+},[[4,"static/runtime/webpack.js"]]]);
 //# sourceMappingURL=[id].js.map

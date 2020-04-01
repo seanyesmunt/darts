@@ -2,6 +2,7 @@ import React from "react";
 import Head from "next/head";
 import { useGetUser } from "../effects/user";
 import { useGetGame } from "../effects/game";
+import "../types.ts";
 import "./style.scss";
 
 export default function App({ Component, pageProps }) {
