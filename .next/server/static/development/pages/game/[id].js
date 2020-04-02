@@ -662,7 +662,7 @@ function ScoreBoard(props) {
         columnNumber: 17
       }
     }, __jsx("div", {
-      className: "text-lg md:text-md text-gray-300",
+      className: "text-lg md:text-md text-gray-300 truncate ...",
       __self: this,
       __source: {
         fileName: _jsxFileName,

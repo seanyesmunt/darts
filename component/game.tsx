@@ -221,7 +221,7 @@ function ScoreBoard(props) {
                     }
                   )}
                 >
-                  <div className="text-lg md:text-md text-gray-300">
+                  <div className="text-lg md:text-md text-gray-300 truncate ...">
                     {player.name}
                   </div>
                   <div className="text-4xl">{userScore.total}</div>
