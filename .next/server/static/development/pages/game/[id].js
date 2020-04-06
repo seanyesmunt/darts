@@ -88,7 +88,7 @@ module.exports =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -408,14 +408,18 @@ function Game(props) {
         score[scoreEventUserID][hitValue] += 1;
       }
     } else {
-      // The user already closed that number out
+      // The user already closed that number out if other player didn't close it out
       // If 2 player game, add it to their own score
       // Else, add it to the other players who haven't closed it yet's score
       if (players.length < 3) {
-        players.forEach(player => {
+        players.forEach((player, index) => {
           const wasPlayersOwnHit = player.id === scoreEventUserID;
+          const indexOfCurrentPlayer = index;
+          const indexOfOtherPlayer = indexOfCurrentPlayer === 0 ? 1 : 0;
+          const otherPlayer = players[indexOfOtherPlayer];
+          const otherPlayerScore = score[otherPlayer.id][hitValue];
 
-          if (wasPlayersOwnHit) {
+          if (wasPlayersOwnHit && otherPlayerScore !== 3) {
             score[player.id].total += hitValue;
           }
         });
@@ -479,7 +483,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 139,
+      lineNumber: 144,
       columnNumber: 5
     }
   }, __jsx("img", {
@@ -488,7 +492,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 140,
+      lineNumber: 145,
       columnNumber: 7
     }
   }), __jsx("h1", {
@@ -496,7 +500,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 141,
+      lineNumber: 146,
       columnNumber: 7
     }
   }, "Nice one ", winnerName, "!"), __jsx("div", {
@@ -504,7 +508,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 143,
+      lineNumber: 148,
       columnNumber: 7
     }
   }, creator && creator.id === userID ? __jsx("button", {
@@ -513,7 +517,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 145,
+      lineNumber: 150,
       columnNumber: 11
     }
   }, "New Game") : __jsx("div", {
@@ -521,7 +525,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 152,
+      lineNumber: 157,
       columnNumber: 11
     }
   }, "Waiting for the host to start the another game..."))) : __jsx("div", {
@@ -529,7 +533,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 159,
+      lineNumber: 164,
       columnNumber: 5
     }
   }, __jsx(ScoreBoard, {
@@ -539,7 +543,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 160,
+      lineNumber: 165,
       columnNumber: 7
     }
   }), __jsx("button", {
@@ -548,7 +552,7 @@ function Game(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 161,
+      lineNumber: 166,
       columnNumber: 7
     }
   }, "Reset Score"));
@@ -567,7 +571,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 177,
+      lineNumber: 182,
       columnNumber: 5
     }
   }, __jsx("div", {
@@ -575,7 +579,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 178,
+      lineNumber: 183,
       columnNumber: 7
     }
   }, __jsx("div", {
@@ -583,7 +587,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 179,
+      lineNumber: 184,
       columnNumber: 9
     }
   }, __jsx("div", {
@@ -591,7 +595,7 @@ function ScoreBoard(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 180,
+      lineNumber: 185,
       columnNumber: 11
     }
   }, ["", 20, 19, 18, 17, 16, 15, 25].map((value, index) => {
@@ -601,14 +605,14 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 183,
+        lineNumber: 188,
         columnNumber: 17
       }
     }, __jsx("span", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 189,
+        lineNumber: 194,
         columnNumber: 19
       }
     }, value === "" && game && game.score_events ? __jsx("button", {
@@ -617,7 +621,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 191,
+        lineNumber: 196,
         columnNumber: 23
       }
     }, __jsx(SVG, {
@@ -625,7 +629,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 195,
+        lineNumber: 200,
         columnNumber: 25
       }
     }, __jsx("path", {
@@ -634,7 +638,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 196,
+        lineNumber: 201,
         columnNumber: 27
       }
     }))) : value));
@@ -648,7 +652,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 215,
+        lineNumber: 222,
         columnNumber: 15
       }
     }, __jsx("div", {
@@ -658,7 +662,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 216,
+        lineNumber: 223,
         columnNumber: 17
       }
     }, __jsx("div", {
@@ -666,7 +670,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 224,
+        lineNumber: 231,
         columnNumber: 19
       }
     }, player.name), __jsx("div", {
@@ -674,7 +678,7 @@ function ScoreBoard(props) {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 227,
+        lineNumber: 234,
         columnNumber: 19
       }
     }, userScore.total)), [20, 19, 18, 17, 16, 15, 25].map(number => {
@@ -687,7 +691,7 @@ function ScoreBoard(props) {
         __self: this,
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 231,
+          lineNumber: 238,
           columnNumber: 21
         }
       });
@@ -714,7 +718,7 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 259,
+      lineNumber: 266,
       columnNumber: 5
     }
   }, __jsx("button", {
@@ -726,14 +730,14 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 260,
+      lineNumber: 267,
       columnNumber: 7
     }
   }, score === 1 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 271,
+      lineNumber: 278,
       columnNumber: 11
     }
   }, __jsx("line", {
@@ -744,56 +748,17 @@ function ScoreRow(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 272,
+      lineNumber: 279,
       columnNumber: 13
     }
   })), score === 2 && __jsx(SVG, {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 276,
+      lineNumber: 283,
       columnNumber: 11
     }
   }, __jsx("line", {
-    x1: "15",
-    y1: "9",
-    x2: "9",
-    y2: "15",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 277,
-      columnNumber: 13
-    }
-  }), __jsx("line", {
-    x1: "9",
-    y1: "9",
-    x2: "15",
-    y2: "15",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 278,
-      columnNumber: 13
-    }
-  })), score > 2 && __jsx(SVG, {
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 282,
-      columnNumber: 11
-    }
-  }, __jsx("circle", {
-    cx: "12",
-    cy: "12",
-    r: "10",
-    __self: this,
-    __source: {
-      fileName: _jsxFileName,
-      lineNumber: 283,
-      columnNumber: 13
-    }
-  }), __jsx("line", {
     x1: "15",
     y1: "9",
     x2: "9",
@@ -813,6 +778,45 @@ function ScoreRow(props) {
     __source: {
       fileName: _jsxFileName,
       lineNumber: 285,
+      columnNumber: 13
+    }
+  })), score > 2 && __jsx(SVG, {
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 289,
+      columnNumber: 11
+    }
+  }, __jsx("circle", {
+    cx: "12",
+    cy: "12",
+    r: "10",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 290,
+      columnNumber: 13
+    }
+  }), __jsx("line", {
+    x1: "15",
+    y1: "9",
+    x2: "9",
+    y2: "15",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 291,
+      columnNumber: 13
+    }
+  }), __jsx("line", {
+    x1: "9",
+    y1: "9",
+    x2: "15",
+    y2: "15",
+    __self: this,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 292,
       columnNumber: 13
     }
   }))));
@@ -838,7 +842,7 @@ function SVG(props) {
     __self: this,
     __source: {
       fileName: _jsxFileName,
-      lineNumber: 296,
+      lineNumber: 303,
       columnNumber: 5
     }
   }), children);
@@ -2880,7 +2884,7 @@ function GamePage(props) {
 
 /***/ }),
 
-/***/ 6:
+/***/ 7:
 /*!***********************************!*\
   !*** multi ./pages/game/[id].tsx ***!
   \***********************************/
